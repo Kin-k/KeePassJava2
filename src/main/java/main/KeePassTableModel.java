@@ -16,20 +16,24 @@
 package main;
 
 import java.util.ArrayList;
+import java.util.EventListener;
 import java.util.List;
+import javax.swing.event.EventListenerList;
+import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
+import org.linguafranca.pwdb.Entry;
 
 /**
  *
  * @author SpecOp0
  */
-public class KeePassTableModel implements TableModel {
+public class KeePassTableModel implements TableModel, SelectionChangedListener {
 
-    private final String[] dataTableColumns = {"Title", "Username", "URL"};
+    private final EventListenerList listeners = new EventListenerList();
     private final List<DatabaseObject> data = new ArrayList<>();
 
-    private enum dataTableColumnss {
+    private enum DataTableColumns {
 
         TITLE, USERNAME, URL
     };
@@ -41,13 +45,24 @@ public class KeePassTableModel implements TableModel {
 
     @Override
     public int getColumnCount() {
-        return dataTableColumns.length;
+        return DataTableColumns.values().length;
     }
 
     @Override
     public String getColumnName(int columnIndex) {
-        if (columnIndex >= 0 && columnIndex < dataTableColumns.length) {
-            return dataTableColumns[columnIndex];
+        try {
+            switch (DataTableColumns.values()[columnIndex]) {
+                case TITLE:
+                    return "Title";
+                case USERNAME:
+                    return "Username";
+                case URL:
+                    return "URL";
+                default:
+                    throw new AssertionError(DataTableColumns.values()[columnIndex].name());
+            }
+        } catch (ArrayIndexOutOfBoundsException ex) {
+
         }
         return "";
     }
@@ -73,11 +88,26 @@ public class KeePassTableModel implements TableModel {
     }
 
     @Override
+    public void showData(DatabaseObject object) {
+        data.clear();
+        if (null != object) {
+            if (object.isGroup()) {
+                for (Entry entry : object.getGroup().getEntries()) {
+                    data.add(new DatabaseObject(entry));
+                }
+            } else if (object.isEntry()) {
+                data.add(object);
+            }
+        }
+        tableChanged();
+    }
+
+    @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         String returnValue = "";
         try {
             DatabaseObject object = data.get(rowIndex);
-            switch (dataTableColumnss.values()[columnIndex]) {
+            switch (DataTableColumns.values()[columnIndex]) {
                 case TITLE:
                     if (object.isGroup()) {
                         return object.getGroup().getName();
@@ -100,7 +130,7 @@ public class KeePassTableModel implements TableModel {
                     }
                     break;
                 default:
-                    throw new AssertionError(dataTableColumnss.values()[columnIndex].name());
+                    throw new AssertionError(DataTableColumns.values()[columnIndex].name());
 
             }
         } catch (ArrayIndexOutOfBoundsException ex) {
@@ -115,10 +145,19 @@ public class KeePassTableModel implements TableModel {
 
     @Override
     public void addTableModelListener(TableModelListener l) {
+        getListeners().add(TableModelListener.class, l);
     }
 
     @Override
     public void removeTableModelListener(TableModelListener l) {
+        getListeners().remove(TableModelListener.class, l);
+    }
+
+    private void tableChanged() {
+        TableModelEvent event = new TableModelEvent(this);
+        for (TableModelListener listener : getListeners().getListeners(TableModelListener.class)) {
+            listener.tableChanged(event);
+        }
     }
 
     public boolean isEmpty() {
@@ -131,6 +170,18 @@ public class KeePassTableModel implements TableModel {
 
     public void add(DatabaseObject object) {
         data.add(object);
+    }
+
+    public <T extends EventListener> void addListener(Class<T> className, T listener) {
+        getListeners().add(className, listener);
+    }
+
+    public <T extends EventListener> void removeListener(Class<T> className, T listener) {
+        getListeners().remove(className, listener);
+    }
+
+    public EventListenerList getListeners() {
+        return listeners;
     }
 
 }

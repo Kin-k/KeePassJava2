@@ -36,28 +36,26 @@ import javax.swing.JTable;
 import javax.swing.JToolBar;
 import javax.swing.JTree;
 import javax.swing.ListSelectionModel;
-import javax.swing.event.TreeSelectionEvent;
+import javax.swing.SwingUtilities;
+import javax.swing.event.TableModelEvent;
+import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.tree.DefaultMutableTreeNode;
-import javax.swing.tree.DefaultTreeModel;
-import org.linguafranca.pwdb.Entry;
-import org.linguafranca.pwdb.Group;
+import javax.swing.table.TableModel;
+import javax.swing.tree.DefaultTreeCellRenderer;
 
 /**
  *
  * @author SpecOp0
  */
-public class KeePassGUI extends JFrame implements ControllerListener {
+public class KeePassGUI extends JFrame implements ControllerListener, TableModelListener {
 
     private static final long serialVersionUID = 1L;
 
     private final List<ActionButton> topPanelButtons = new ArrayList<>();
-    private final JTree tree;
 
-    private final KeePassTableModel tableModel;
     private final JTable dataTable;
 
-    public KeePassGUI(String title) throws HeadlessException {
+    public KeePassGUI(String title, JTree tree, TableModel tableModel) throws HeadlessException {
         super(title);
         this.setLayout(new BorderLayout());
 
@@ -100,12 +98,11 @@ public class KeePassGUI extends JFrame implements ControllerListener {
         this.add(topPanel, BorderLayout.PAGE_START);
 
         // main window entry tree
-        DefaultMutableTreeNode root = new DefaultMutableTreeNode("root");
-        tree = new JTree(root);
+        DefaultTreeCellRenderer renderer = new KeePassTreeRenderer();
+        tree.setCellRenderer(renderer);
         JScrollPane treePane = new JScrollPane(tree);
 
         // main window data table
-        tableModel = new KeePassTableModel();
         dataTable = new JTable(tableModel);
         dataTable.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         JScrollPane dataPane = new JScrollPane(dataTable);
@@ -126,35 +123,9 @@ public class KeePassGUI extends JFrame implements ControllerListener {
 
     @Override
     public void setEnabledAllButtons(boolean enabled) {
-        getTopPanelButtons().stream().forEach((button) -> {
+        getTopPanelButtons().stream().filter((ActionButton button) -> !ActionTypeHelper.isAlwaysActive(button)).forEach((ActionButton button) -> {
             button.setEnabled(enabled);
         });
-    }
-
-    @Override
-    public void databaseChanged(DatabaseChangedEvent event) {
-        // get root and change it
-        DefaultTreeModel model = (DefaultTreeModel) getTree().getModel();
-        DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
-        root.removeAllChildren();
-        root.setUserObject(event.getDatabase().getRootGroup().getName());
-        // search groups
-        for (Group group : event.getDatabase().getRootGroup().getGroups()) {
-            DefaultMutableTreeNode branch = new DefaultMutableTreeNode(new DatabaseObject(group));
-            // and add entries
-            for (Entry entry : group.getEntries()) {
-                DefaultMutableTreeNode leaf = new DefaultMutableTreeNode(new DatabaseObject(entry));
-                branch.insert(leaf, branch.getChildCount());
-            }
-            root.add(branch);
-        }
-        // add direct entries for oot
-        for (Entry entry : event.getDatabase().getRootGroup().getEntries()) {
-            DefaultMutableTreeNode leaf = new DefaultMutableTreeNode(new DatabaseObject(entry));
-            root.insert(leaf, root.getChildCount());
-        }
-        // reload (closes tree if update only)
-        model.reload(root);
     }
 
     public static File chooseFile() {
@@ -183,25 +154,14 @@ public class KeePassGUI extends JFrame implements ControllerListener {
     }
 
     @Override
-    public void showData(DatabaseChangedEvent event1, TreeSelectionEvent event2) {
-        DefaultMutableTreeNode node = (DefaultMutableTreeNode) getTree().getLastSelectedPathComponent();
-        if (null != node && node.getUserObject().getClass().equals(DatabaseObject.class)) {
-            DatabaseObject object = (DatabaseObject) node.getUserObject();
-            getTableModel().clear();
-            if (object.isGroup()) {
-                for (Entry entry : object.getGroup().getEntries()) {
-                    getTableModel().add(new DatabaseObject(entry));
-                }
-            } else if (object.isEntry()) {
-                getTableModel().add(object);
-            }
-            if (!getTableModel().isEmpty()) {
-                getDataTable().getSelectionModel().setLeadSelectionIndex(0);
-                getDataTable().getSelectionModel().setAnchorSelectionIndex(0);
-            }
-            getDataTable().getParent().revalidate();
-            getDataTable().getParent().repaint();
+    public void tableChanged(TableModelEvent e) {
+        if (getDataTable().getModel().getRowCount() > 0) {
+            SwingUtilities.invokeLater(() -> {
+                getDataTable().setRowSelectionInterval(0, 0);
+            });
         }
+        getDataTable().getParent().revalidate();
+        getDataTable().getParent().repaint();
     }
 
     @Override
@@ -224,7 +184,9 @@ public class KeePassGUI extends JFrame implements ControllerListener {
     }
 
     public void copy(boolean isUsername) {
-        DatabaseObject object = getTableModel().getDatabaseObject(getDataTable().getSelectedRow());
+        // only use of KeePass model variants
+        KeePassTableModel model = (KeePassTableModel) getDataTable().getModel();
+        DatabaseObject object = model.getDatabaseObject(getDataTable().getSelectedRow());
         if (null != object && object.isEntry()) {
             String message;
             if (isUsername) {
@@ -240,14 +202,6 @@ public class KeePassGUI extends JFrame implements ControllerListener {
 
     public List<ActionButton> getTopPanelButtons() {
         return topPanelButtons;
-    }
-
-    public JTree getTree() {
-        return tree;
-    }
-
-    public KeePassTableModel getTableModel() {
-        return tableModel;
     }
 
     public JTable getDataTable() {

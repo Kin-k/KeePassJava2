@@ -25,10 +25,12 @@ import java.io.InputStream;
 import java.util.EventListener;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.event.EventListenerList;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
 import org.linguafranca.pwdb.Database;
 import org.linguafranca.pwdb.kdbx.KdbxCredentials;
 import org.linguafranca.pwdb.kdbx.dom.DomDatabaseWrapper;
@@ -41,10 +43,76 @@ import org.linguafranca.security.Credentials;
 public class KeePassController implements TreeSelectionListener {
 
     private final EventListenerList listeners = new EventListenerList();
-    private Database database = null;
     private static Thread passwordReset = null;
+    private Database database = null;
 
-    void open(File file, byte[] password) {
+    public KeePassController() {
+    }
+
+    public void lock() {
+        // clear database (tree)
+        setDatabase(null);
+        notifyDatabaseChanged();
+        // clear shown entries (data model)
+        for (SelectionChangedListener listener : getListeners().getListeners(SelectionChangedListener.class)) {
+            listener.showData(null);
+        }
+    }
+
+    public void open() {
+        // open file chooser to determine file
+        DatabasePath databasePath = new DatabasePath();
+        databasePath.load();
+        String path = ".";
+        if (databasePath.isDatabase()) {
+            String directPath = databasePath.getPath();
+            int lastSlash = directPath.lastIndexOf('\\');
+            if (lastSlash == -1) {
+                lastSlash = directPath.lastIndexOf('/');
+            }
+            if (lastSlash != -1) {
+                path = directPath.substring(0, lastSlash);
+            }
+        }
+        open(KeePassGUI.chooseFile(path));
+    }
+
+    public void open(String path) {
+        final File file = new File(path);
+        open(file);
+    }
+
+    private void open(final File file) {
+        if (null != file) {
+            // enter password
+            final byte[] password = KeePassGUI.enterPassword();
+            if (null != password) {
+                setEnabled(false);
+                // start worker
+                Thread worker = new Thread() {
+
+                    @Override
+                    public void run() {
+                        // heavy computing (decrypt database)
+                        open(file, password);
+                        SwingUtilities.invokeLater(() -> {
+                            setEnabled(true);
+                            if (null != getDatabase()) {
+                                notifyDatabaseChanged();
+                                // save path to file
+                                DatabasePath databasePath = new DatabasePath();
+                                databasePath.setPath(file.getAbsolutePath());
+                                databasePath.save();
+                            }
+                        });
+                    }
+                };
+                worker.start();
+            }
+        }
+    }
+
+    private void open(File file, byte[] password) {
         InputStream decryptedInputStream = null;
         try {
             InputStream inputStream = new FileInputStream(file);
@@ -76,59 +144,6 @@ public class KeePassController implements TreeSelectionListener {
         }
     }
 
-    void open() {
-        // open file chooser to determine file
-        DatabasePath databasePath = new DatabasePath();
-        databasePath.load();
-        String path = ".";
-        if (databasePath.isDatabase()) {
-            String directPath = databasePath.getPath();
-            int lastSlash = directPath.lastIndexOf('\\');
-            if (lastSlash == -1) {
-                lastSlash = directPath.lastIndexOf('/');
-            }
-            if (lastSlash != -1) {
-                path = directPath.substring(0, lastSlash);
-            }
-        }
-        open(KeePassGUI.chooseFile(path));
-    }
-
-    void open(String path) {
-        final File file = new File(path);
-        open(file);
-    }
-
-    void open(final File file) {
-        if (null != file) {
-            // enter password
-            final byte[] password = KeePassGUI.enterPassword();
-            if (null != password) {
-                setEnabled(false);
-                // start worker
-                Thread worker = new Thread() {
-
-                    @Override
-                    public void run() {
-                        // heavy computing (decrypt database)
-                        KeePassController.this.open(file, password);
-                        SwingUtilities.invokeLater(() -> {
-                            setEnabled(true);
-                            if (null != getDatabase()) {
-                                notifyDatabaseChanged();
-                                // save path to file
-                                DatabasePath databasePath = new DatabasePath();
-                                databasePath.setPath(file.getAbsolutePath());
-                                databasePath.save();
-                            }
-                        });
-                    }
-                };
-                worker.start();
-            }
-        }
-    }
-
     void copyUsername() {
         for (ControllerListener listener : getListeners().getListeners(ControllerListener.class)) {
             listener.copyUsername();
@@ -136,33 +151,44 @@ public class KeePassController implements TreeSelectionListener {
     }
 
     synchronized void copyPassword() {
-        passwordReset = new Thread() {
-
+        setPasswordReset(new Thread() {
             @Override
             public void run() {
                 try {
                     Thread.sleep(10000);
-                    if (null == passwordReset || passwordReset == this) {
+                    if (null == getPasswordReset() || getPasswordReset() == this) {
                         copyToClipboard("");
-                        passwordReset = null;
+                        setPasswordReset(null);
                     }
                 } catch (InterruptedException ex) {
-                    Logger.getLogger(KeePassController.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(KeePassController.class
+                            .getName()).log(Level.SEVERE, null, ex);
                 }
             }
-        };
+        });
+
         for (ControllerListener listener : getListeners().getListeners(ControllerListener.class)) {
             listener.copyPassword();
         }
-        passwordReset.start();
+        getPasswordReset().start();
+    }
+
+    public static void copyToClipboard(String message) {
+        StringSelection stringSelection = new StringSelection(message);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(stringSelection, null);
     }
 
     @Override
     public void valueChanged(TreeSelectionEvent e) {
-        if (null != getDatabase()) {
-            DatabaseChangedEvent event1 = new DatabaseChangedEvent(this, getDatabase());
-            for (ControllerListener listener : getListeners().getListeners(ControllerListener.class)) {
-                listener.showData(event1, e);
+        JTree treea = (JTree) e.getSource();
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) treea.getLastSelectedPathComponent();
+        if (null != node && node.getUserObject().getClass().equals(DatabaseObject.class)) {
+            DatabaseObject object = (DatabaseObject) node.getUserObject();
+            if (null != getDatabase()) {
+                for (SelectionChangedListener listener : getListeners().getListeners(SelectionChangedListener.class)) {
+                    listener.showData(object);
+                }
             }
         }
     }
@@ -174,11 +200,9 @@ public class KeePassController implements TreeSelectionListener {
     }
 
     public void notifyDatabaseChanged() {
-        if (null != getDatabase()) {
-            DatabaseChangedEvent event = new DatabaseChangedEvent(this, getDatabase());
-            for (ControllerListener listener : getListeners().getListeners(ControllerListener.class)) {
-                listener.databaseChanged(event);
-            }
+        DatabaseChangedEvent event = new DatabaseChangedEvent(this, getDatabase());
+        for (DatabaseChangedListener listener : getListeners().getListeners(DatabaseChangedListener.class)) {
+            listener.databaseChanged(event);
         }
     }
 
@@ -193,17 +217,11 @@ public class KeePassController implements TreeSelectionListener {
     void exit() {
         if (null != getDatabase() && getDatabase().isDirty()) {
             // abort exit if database changed and user cancels action
-            if (KeePassGUI.showCancelDialog("Exit without Saving", "The are unsaved changes in the database. If you exit all unsaved data will be lost. Do you really want to exit?")) {
+            if (KeePassGUI.showCancelDialog("Exit without Saving", "There are unsaved changes in the database. If you exit all unsaved data will be lost. Do you really want to exit?")) {
                 return;
             }
         }
         System.exit(0);
-    }
-
-    public static void copyToClipboard(String message) {
-        StringSelection stringSelection = new StringSelection(message);
-        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-        clipboard.setContents(stringSelection, null);
     }
 
     // getter and setter
@@ -217,6 +235,14 @@ public class KeePassController implements TreeSelectionListener {
 
     public EventListenerList getListeners() {
         return listeners;
+    }
+
+    public static Thread getPasswordReset() {
+        return passwordReset;
+    }
+
+    public static void setPasswordReset(Thread aPasswordReset) {
+        passwordReset = aPasswordReset;
     }
 
 }

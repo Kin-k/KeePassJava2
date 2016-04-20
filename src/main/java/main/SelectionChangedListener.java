@@ -21,12 +21,8 @@ import java.util.EventListener;
  *
  * @author SpecOp0
  */
-public interface ControllerListener extends EventListener {
+public interface SelectionChangedListener extends EventListener {
 
-    void setEnabledAllButtons(boolean enabled);
-
-    void copyUsername();
-
-    void copyPassword();
+    void showData(DatabaseObject object);
 
 }

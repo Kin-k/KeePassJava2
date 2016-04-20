@@ -17,13 +17,16 @@ package main;
 
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
+import org.linguafranca.pwdb.Entry;
+import org.linguafranca.pwdb.Group;
 
 /**
  *
  * @author SpecOp0
  */
-public class KeePassTree extends JTree {
+public class KeePassTree extends JTree implements DatabaseChangedListener {
 
     private static final long serialVersionUID = 1L;
 
@@ -31,27 +34,36 @@ public class KeePassTree extends JTree {
         super(root);
     }
 
-    @Override
-    public String convertValueToText(Object value, boolean selected,
-            boolean expanded, boolean leaf, int row, boolean hasFocus) {
-        if (value.getClass().equals(DefaultMutableTreeNode.class)) {
-            DefaultMutableTreeNode node = (DefaultMutableTreeNode) value;
-            Object object = node.getUserObject();
-//            if (object.getClass().equals(BookInfo.class)) {
-//                BookInfo book = (BookInfo) object;
-//                return book.title;
-
-//                } else if (object.getClass().equals(DatabaseObject.class)) {
-//                    DatabaseObject dbobject = (DatabaseObject) object;
-//                    if (dbobject.isGroup()) {
-//                        return dbobject.getGroup().getName();
-//                    }
-//                    if (dbobject.isEntry()) {
-//                        return dbobject.getEntry().getTitle();
-//                    }
-//            }
-        }
-        return super.convertValueToText(value, selected, expanded, leaf, row, hasFocus);
+    public KeePassTree(String rootName) {
+        super(new DefaultMutableTreeNode("root"));
     }
 
+    @Override
+    public void databaseChanged(DatabaseChangedEvent event) {
+        // get root and change it
+        DefaultTreeModel model = (DefaultTreeModel) getModel();
+        DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
+        root.removeAllChildren();
+        if (null != event.getDatabase()) {
+            root.setUserObject(event.getDatabase().getRootGroup().getName());
+            // search groups
+            for (Group group : event.getDatabase().getRootGroup().getGroups()) {
+                DefaultMutableTreeNode branch = new DefaultMutableTreeNode(new DatabaseObject(group));
+                // and add entries
+                for (Entry entry : group.getEntries()) {
+                    DefaultMutableTreeNode leaf = new DefaultMutableTreeNode(new DatabaseObject(entry));
+                    branch.insert(leaf, branch.getChildCount());
+                }
+                root.add(branch);
+            }
+            // add direct entries for root
+            for (Entry entry : event.getDatabase().getRootGroup().getEntries()) {
+                DefaultMutableTreeNode leaf = new DefaultMutableTreeNode(new DatabaseObject(entry));
+                root.insert(leaf, root.getChildCount());
+            }
+        }
+        // reload (closes tree if update only)
+        model.reload(root);
+    }
+    
 }

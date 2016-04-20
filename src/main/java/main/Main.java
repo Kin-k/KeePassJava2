@@ -16,7 +16,6 @@
 package main;
 
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -26,22 +25,30 @@ import java.awt.event.WindowEvent;
  */
 public class Main {
 
-    private static final KeePassGUI gui = new KeePassGUI("KeePass 2");
+    private static final KeePassTree tree = new KeePassTree("root");
+    private static final KeePassTableModel tableModel = new KeePassTableModel();
     private static final KeePassController controller = new KeePassController();
+    private static final KeePassGUI gui = new KeePassGUI("KeePass 2", tree, tableModel);
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        // gui actions initiated from controller (disable buttons, copy selected data)
         getController().addListener(ControllerListener.class, getGui());
+        // update tree if new database loaded
+        getController().addListener(DatabaseChangedListener.class, getTree());
+        // update table if group/entry in tree is selected
+        getTree().addTreeSelectionListener(getController());
+        getController().addListener(SelectionChangedListener.class, getTableModel());
+        // update gui if table is changed
+        getTableModel().addTableModelListener(getGui());
+        
         for (ActionButton button : getGui().getTopPanelButtons()) {
             switch (button.getType()) {
                 case OPEN:
-                    button.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            getController().open();
-                        }
+                    button.addActionListener((ActionEvent e) -> {
+                        getController().open();
                     });
                     break;
                 case SAVE:
@@ -53,32 +60,25 @@ public class Main {
                 case DELETE:
                     break;
                 case COPY_USER:
-                    button.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            getController().copyUsername();
-                        }
+                    button.addActionListener((ActionEvent e) -> {
+                        getController().copyUsername();
                     });
                     break;
                 case COPY_PW:
-                    button.addActionListener(new ActionListener() {
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            getController().copyPassword();
-                        }
+                    button.addActionListener((ActionEvent e) -> {
+                        getController().copyPassword();
                     });
                     break;
                 case LOCK:
+                    button.addActionListener((ActionEvent e) -> {
+                        getController().lock();
+                    });
                     break;
                 case SEARCH:
                     break;
                 case EXIT:
-                    button.addActionListener(new ActionListener() {
-
-                        @Override
-                        public void actionPerformed(ActionEvent e) {
-                            getController().exit();
-                        }
+                    button.addActionListener((ActionEvent e) -> {
+                        getController().exit();
                     });
                     break;
                 default:
@@ -92,7 +92,6 @@ public class Main {
                 getController().exit();
             }
         });
-        getGui().getTree().addTreeSelectionListener(getController());
 
         DatabasePath databasePath = new DatabasePath();
         databasePath.load();
@@ -111,4 +110,11 @@ public class Main {
         return controller;
     }
 
+    public static KeePassTree getTree() {
+        return tree;
+    }
+
+    public static KeePassTableModel getTableModel() {
+        return tableModel;
+    }
 }

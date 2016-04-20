@@ -40,6 +40,16 @@ public class ActionTypeHelper {
         }
         return false;
     }
+    
+    public static boolean isAlwaysActive(ActionButton button){
+        switch (button.getType()){
+            case COPY_USER:
+            case COPY_PW:
+            case EXIT:
+                return true;
+        }
+        return false;
+    }
 
     public static ImageIcon getIcon(ActionType type) {
         URL ressource = null;
