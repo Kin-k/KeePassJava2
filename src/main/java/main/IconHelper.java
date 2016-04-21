@@ -30,7 +30,7 @@ public class IconHelper {
     public static ImageIcon getImageIcon(Icon icon) {
         // load image (manual lazy load)
         ImageIcon imageIcon = null;
-        if (icon.getIndex() >= 0 && icon.getIndex() < imageIconList.length) {
+        if (null != icon && icon.getIndex() >= 0 && icon.getIndex() < imageIconList.length) {
             imageIcon = imageIconList[icon.getIndex()];
             if (null == imageIcon) {
                 String imageName = String.format("icons/database/%02d.png", icon.getIndex());

@@ -41,7 +41,7 @@ public class DatabaseObject {
         this.group = group;
         this.entry = entry;
         if (null == group && null == entry) {
-            System.out.println("Error: both objects null");
+            throw new IllegalArgumentException("Both Objects are null");
         }
     }
 

@@ -28,6 +28,7 @@ import java.util.Properties;
 public class DatabasePath extends Properties {
 
     private static final long serialVersionUID = 1L;
+    private static final String filename = "path.ini";
 
     public DatabasePath() {
         setPath(".");
@@ -39,7 +40,7 @@ public class DatabasePath extends Properties {
 
     public void load() {
         try {
-            FileInputStream fis = new FileInputStream("path.ini");
+            FileInputStream fis = new FileInputStream(getFilename());
             load(fis);
             fis.close();
         } catch (NullPointerException ex) {
@@ -53,7 +54,7 @@ public class DatabasePath extends Properties {
 
     public void save() {
         try {
-            FileOutputStream fos = new FileOutputStream("path.ini");
+            FileOutputStream fos = new FileOutputStream(getFilename());
             store(fos, null);
             fos.close();
         } catch (NullPointerException ex) {
@@ -64,12 +65,12 @@ public class DatabasePath extends Properties {
             System.out.println("I/O exception");
         }
     }
-    
-    public boolean isDatabase(){
+
+    public boolean isDatabase() {
         return isDatabase(getPath());
     }
-    
-    public static boolean isDatabase(String path){
+
+    public static boolean isDatabase(String path) {
         return (path.endsWith(".kdb") || path.endsWith(".kdbx"));
     }
 
@@ -80,4 +81,9 @@ public class DatabasePath extends Properties {
     public void setPath(String path) {
         setProperty("path", path);
     }
+
+    public static String getFilename() {
+        return filename;
+    }
+
 }

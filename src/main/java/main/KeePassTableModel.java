@@ -81,7 +81,7 @@ public class KeePassTableModel implements TableModel, SelectionChangedListener {
         DatabaseObject object = null;
         try {
             object = data.get(rowIndex);
-        } catch (ArrayIndexOutOfBoundsException ex) {
+        } catch (IndexOutOfBoundsException ex) {
 
         }
         return object;
@@ -133,7 +133,7 @@ public class KeePassTableModel implements TableModel, SelectionChangedListener {
                     throw new AssertionError(DataTableColumns.values()[columnIndex].name());
 
             }
-        } catch (ArrayIndexOutOfBoundsException ex) {
+        } catch (IndexOutOfBoundsException ex) {
 
         }
         return returnValue;
@@ -170,6 +170,14 @@ public class KeePassTableModel implements TableModel, SelectionChangedListener {
 
     public void add(DatabaseObject object) {
         data.add(object);
+    }
+
+    public DatabaseObject get(int index) {
+        return data.get(index);
+    }
+
+    public int size() {
+        return data.size();
     }
 
     public <T extends EventListener> void addListener(Class<T> className, T listener) {
