@@ -16,7 +16,10 @@
 package main;
 
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.net.URL;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import static main.DatabasePath.getFilename;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -36,13 +39,31 @@ public class DatabasePathTest {
     @BeforeClass
     public static void setUpClass() throws Exception {
         // create path.ini
-        FileOutputStream fos = new FileOutputStream(getFilename());
         URL defaultPath = ActionTypeHelper.class.getClassLoader().getResource("test.kdbx");
         expectedPath = defaultPath.getFile();
-        String pathProperty = "path=" + expectedPath;
-        System.out.println(pathProperty);
-        fos.write(pathProperty.getBytes());
-        fos.close();
+        createPathFile(expectedPath);
+    }
+
+    public static void createPathFile(String path) {
+        FileOutputStream fos = null;
+        try {
+            // create path.ini
+            fos = new FileOutputStream(getFilename());
+            String pathProperty = "path=" + path;
+            System.out.println(pathProperty);
+            fos.write(pathProperty.getBytes());
+            fos.close();
+        } catch (IOException ex) {
+            Logger.getLogger(DatabasePathTest.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                if (null != fos) {
+                    fos.close();
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(DatabasePathTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     /**
