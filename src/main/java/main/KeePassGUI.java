@@ -47,7 +47,7 @@ import javax.swing.tree.DefaultTreeCellRenderer;
  *
  * @author SpecOp0
  */
-public class KeePassGUI extends JFrame implements ControllerListener, TableModelListener {
+public class KeePassGUI extends JFrame implements TableModelListener {
 
     private static final long serialVersionUID = 1L;
 
@@ -115,13 +115,11 @@ public class KeePassGUI extends JFrame implements ControllerListener, TableModel
 
         // frame settings
         this.setSize(800, 500);
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setVisible(true);
         this.setLocationRelativeTo(null);
         this.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        this.setVisible(true);
     }
 
-    @Override
     public void setEnabledAllButtons(boolean enabled) {
         getTopPanelButtons().stream().filter((ActionButton button) -> !ActionTypeHelper.isAlwaysActive(button)).forEach((ActionButton button) -> {
             button.setEnabled(enabled);
@@ -164,16 +162,6 @@ public class KeePassGUI extends JFrame implements ControllerListener, TableModel
         getDataTable().getParent().repaint();
     }
 
-    @Override
-    public void copyUsername() {
-        copy(true);
-    }
-
-    @Override
-    public void copyPassword() {
-        copy(false);
-    }
-
     public static void showWarning(String title, String message) {
         JOptionPane.showConfirmDialog(null, message, title, JOptionPane.PLAIN_MESSAGE);
     }
@@ -183,21 +171,11 @@ public class KeePassGUI extends JFrame implements ControllerListener, TableModel
         return returnValue != JOptionPane.YES_OPTION;
     }
 
-    public void copy(boolean isUsername) {
+    public DatabaseObject getSelectedObject() {
         // only use of KeePass model variants
         KeePassTableModel model = (KeePassTableModel) getDataTable().getModel();
         DatabaseObject object = model.getDatabaseObject(getDataTable().getSelectedRow());
-        if (null != object && object.isEntry()) {
-            String message;
-            if (isUsername) {
-                message = object.getEntry().getUsername();
-            } else {
-                message = object.getEntry().getPassword();
-            }
-            KeePassController.copyToClipboard(message);
-        } else {
-            showWarning("Copy to Clipboard Error", "No Entry in table selected (right-hand side).");
-        }
+        return object;
     }
 
     public List<ActionButton> getTopPanelButtons() {

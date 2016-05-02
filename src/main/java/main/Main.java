@@ -16,6 +16,8 @@
 package main;
 
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
@@ -27,15 +29,15 @@ public class Main {
 
     private static final KeePassTree tree = new KeePassTree("root");
     private static final KeePassTableModel tableModel = new KeePassTableModel();
-    private static final KeePassController controller = new KeePassController();
     private static final KeePassGUI gui = new KeePassGUI("KeePass 2", tree, tableModel);
+     private static final KeePassController controller = new KeePassController(gui);
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
         // gui actions initiated from controller (disable buttons, copy selected data)
-        getController().addListener(ControllerListener.class, getGui());
+        // [directly with saved gui object]
         // update tree if new database loaded
         getController().addListener(DatabaseChangedListener.class, getTree());
         // update table if group/entry in tree is selected
@@ -43,43 +45,89 @@ public class Main {
         getController().addListener(SelectionChangedListener.class, getTableModel());
         // update gui if table is changed
         getTableModel().addTableModelListener(getGui());
-        
+        // double click event for tree and table
+        getGui().getDataTable().addMouseListener(new MouseListener() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if(e.getClickCount() >= 2){
+                    e.consume();
+                    getController().showTableSelect();
+                }
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+            }
+        });
+        getTree().addMouseListener(new MouseListener() {
+
+            @Override
+            public void mouseClicked(MouseEvent e) {
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                if(e.getClickCount() >= 2){
+                    e.consume();
+                    getController().showTreeSelect(e);
+                }
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+            }
+        });
+
         for (ActionButton button : getGui().getTopPanelButtons()) {
             switch (button.getType()) {
                 case OPEN:
-                    button.addActionListener((ActionEvent e) -> {
-                        getController().open();
-                    });
+                    button.addActionListener((ActionEvent e) -> getController().open());
                     break;
                 case SAVE:
+                    button.addActionListener((ActionEvent e) -> getController().save());
                     break;
                 case ADD:
                     break;
                 case SHOW:
+                    button.addActionListener((ActionEvent e) -> getController().showTableSelect());
                     break;
                 case DELETE:
+                    button.addActionListener((ActionEvent e) -> getController().deleteEntry());
                     break;
                 case COPY_USER:
-                    button.addActionListener((ActionEvent e) -> {
-                        getController().copyUsername();
-                    });
+                    button.addActionListener((ActionEvent e) -> getController().copyUsername());
                     break;
                 case COPY_PW:
-                    button.addActionListener((ActionEvent e) -> {
-                        getController().copyPassword();
-                    });
+                    button.addActionListener((ActionEvent e) -> getController().copyPassword());
                     break;
                 case LOCK:
-                    button.addActionListener((ActionEvent e) -> {
-                        getController().lock();
-                    });
+                    button.addActionListener((ActionEvent e) -> getController().lock());
                     break;
                 case SEARCH:
                     break;
                 case EXIT:
-                    button.addActionListener((ActionEvent e) -> {
-                        getController().exit();
-                    });
+                    button.addActionListener((ActionEvent e) -> getController().exit());
                     break;
                 default:
                     throw new AssertionError(button.getType().name());
@@ -94,8 +142,10 @@ public class Main {
         });
 
         DatabasePath databasePath = new DatabasePath();
+
         databasePath.load();
         String path = databasePath.getPath();
+
         if (databasePath.isDatabase()) {
             getController().open(path);
             getController().notifyDatabaseChanged();

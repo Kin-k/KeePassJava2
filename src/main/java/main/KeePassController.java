@@ -18,8 +18,12 @@ package main;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.EventListener;
@@ -31,7 +35,7 @@ import javax.swing.event.EventListenerList;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
-import org.linguafranca.pwdb.Database;
+import org.linguafranca.pwdb.Group;
 import org.linguafranca.pwdb.kdbx.KdbxCredentials;
 import org.linguafranca.pwdb.kdbx.dom.DomDatabaseWrapper;
 import org.linguafranca.security.Credentials;
@@ -43,15 +47,22 @@ import org.linguafranca.security.Credentials;
 public class KeePassController implements TreeSelectionListener {
 
     private final EventListenerList listeners = new EventListenerList();
+    private final KeePassGUI gui;
     private static Thread passwordReset = null;
-    private Database database = null;
+    private KeePassShowObjectGUI showObjectGui = null;
+    // current database
+    private DomDatabaseWrapper database = null;
+    private File databaseFile = null;
+    private byte[] password = null;
 
-    public KeePassController() {
+    public KeePassController(KeePassGUI gui) {
+        this.gui = gui;
     }
 
     public void lock() {
         // clear database (tree)
         setDatabase(null);
+        setPassword(null);
         notifyDatabaseChanged();
         // clear shown entries (data model)
         for (SelectionChangedListener listener : getListeners().getListeners(SelectionChangedListener.class)) {
@@ -78,15 +89,14 @@ public class KeePassController implements TreeSelectionListener {
     }
 
     public void open(String path) {
-        final File file = new File(path);
-        open(file);
+        open(new File(path));
     }
 
     private void open(final File file) {
         if (null != file) {
             // enter password
-            final byte[] password = KeePassGUI.enterPassword();
-            if (null != password) {
+            setPassword(KeePassGUI.enterPassword());
+            if (null != getPassword()) {
                 setEnabled(false);
                 // start worker
                 Thread worker = new Thread() {
@@ -94,7 +104,7 @@ public class KeePassController implements TreeSelectionListener {
                     @Override
                     public void run() {
                         // heavy computing (decrypt database)
-                        open(file, password);
+                        open(file, getPassword());
                         SwingUtilities.invokeLater(() -> {
                             setEnabled(true);
                             if (null != getDatabase()) {
@@ -103,6 +113,7 @@ public class KeePassController implements TreeSelectionListener {
                                 DatabasePath databasePath = new DatabasePath();
                                 databasePath.setPath(file.getAbsolutePath());
                                 databasePath.save();
+                                setDatabaseFile(file);
                             }
                         });
                     }
@@ -144,10 +155,67 @@ public class KeePassController implements TreeSelectionListener {
         }
     }
 
-    void copyUsername() {
-        for (ControllerListener listener : getListeners().getListeners(ControllerListener.class)) {
-            listener.copyUsername();
+    void save() {
+        if (null != getDatabase()) {
+            try {
+                FileOutputStream outputStream = new FileOutputStream(getDatabaseFile());
+                Credentials credentials = new KdbxCredentials.Password(getPassword());
+                getDatabase().save(credentials, outputStream);
+                KeePassGUI.showWarning("Databse saved", "Database was saved sucessfully to " + System.lineSeparator() + getDatabaseFile().getAbsolutePath());
+            } catch (IOException ex) {
+                KeePassGUI.showWarning("Error while saving Database", "An Error occured while saving Ddatabase to " + System.lineSeparator() + getDatabaseFile().getAbsolutePath() + System.lineSeparator() + "Try saving again or all changes will be lost!");
+            }
+        } else {
+            KeePassGUI.showWarning("No Database loaded", "Cannot save Database, because no Database is loaded.");
         }
+    }
+
+    public void showTableSelect() {
+        if (null != getDatabase()) {
+            DatabaseObject object = getGui().getSelectedObject();
+            if (null != object && object.isEntry()) {
+                show(object);
+            } else {
+                KeePassGUI.showWarning("Show / Edit Entry error", "No Entry in table selected (right-hand side).");
+            }
+        }
+    }
+
+    public void showTreeSelect(MouseEvent e) {
+        JTree tree = (JTree) e.getSource();
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+        if (null != node && null != node.getUserObject() && node.getUserObject().getClass().equals(DatabaseObject.class)) {
+            DatabaseObject object = (DatabaseObject) node.getUserObject();
+            if (object.isEntry() || object.isGroup()) {
+                show(object);
+            }
+        }
+    }
+
+    public void show(DatabaseObject object) {
+        if (null == getShowObjectGui() && null != object) {
+            if (object.isEntry()) {
+                setShowObjectGui(new KeePassShowEntryGUI(object.getEntry()));
+            } else if (object.isGroup()) {
+                setShowObjectGui(new KeePassShowGroupGUI(object.getGroup()));
+            } else {
+                KeePassGUI.showWarning("Error while showing Data", "Try to show Entry or Group, but could not find either.");
+                throw new IllegalArgumentException("Error while showing Data: Try to show Entry or Group, but could not find either.");
+            }
+            getShowObjectGui().addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent event) {
+                    notifyDatabaseChanged();
+                    setShowObjectGui(null);
+                }
+            });
+        } else {
+            KeePassGUI.showWarning("Entry already shown", "Another Entry window is open. You need to close that window before showing or editing another entry.");
+        }
+    }
+
+    public void copyUsername() {
+        copy(true);
     }
 
     synchronized void copyPassword() {
@@ -166,11 +234,23 @@ public class KeePassController implements TreeSelectionListener {
                 }
             }
         });
-
-        for (ControllerListener listener : getListeners().getListeners(ControllerListener.class)) {
-            listener.copyPassword();
-        }
+        copy(false);
         getPasswordReset().start();
+    }
+
+    public void copy(boolean isUsername) {
+        DatabaseObject object = getGui().getSelectedObject();
+        if (null != object && object.isEntry()) {
+            String message;
+            if (isUsername) {
+                message = object.getEntry().getUsername();
+            } else {
+                message = object.getEntry().getPassword();
+            }
+            KeePassController.copyToClipboard(message);
+        } else {
+            KeePassGUI.showWarning("Copy to Clipboard Error", "No Entry in table selected (right-hand side).");
+        }
     }
 
     public static void copyToClipboard(String message) {
@@ -179,24 +259,44 @@ public class KeePassController implements TreeSelectionListener {
         clipboard.setContents(stringSelection, null);
     }
 
-    @Override
-    public void valueChanged(TreeSelectionEvent e) {
-        JTree treea = (JTree) e.getSource();
-        DefaultMutableTreeNode node = (DefaultMutableTreeNode) treea.getLastSelectedPathComponent();
-        if (null != node && node.getUserObject().getClass().equals(DatabaseObject.class)) {
-            DatabaseObject object = (DatabaseObject) node.getUserObject();
-            if (null != getDatabase()) {
-                for (SelectionChangedListener listener : getListeners().getListeners(SelectionChangedListener.class)) {
-                    listener.showData(object);
+    void deleteEntry() {
+        if (null != getDatabase()) {
+            DatabaseObject object = getGui().getSelectedObject();
+            if (null != object) {
+                if (object.isEntry()) {
+                    Group parent = object.getEntry().getParent();
+                    object.getEntry().getParent().removeEntry(object.getEntry());
+                    // no group, because only tree model (right-hand side) is used
+                    notifyDatabaseChanged();
+                    updateTreeData(new DatabaseObject(parent));
                 }
+
+            } else {
+                KeePassGUI.showWarning("Delete Failed", "No Entry in table selected (right-hand side).");
             }
         }
     }
 
-    private void setEnabled(boolean enabled) {
-        for (ControllerListener listener : getListeners().getListeners(ControllerListener.class)) {
-            listener.setEnabledAllButtons(enabled);
+    @Override
+    public void valueChanged(TreeSelectionEvent e) {
+        JTree tree = (JTree) e.getSource();
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+        if (null != node && null != node.getUserObject() && node.getUserObject().getClass().equals(DatabaseObject.class)) {
+            DatabaseObject object = (DatabaseObject) node.getUserObject();
+            if (null != getDatabase() && object.isGroup()) {
+                updateTreeData(object);
+            }
         }
+    }
+
+    private void updateTreeData(DatabaseObject object) {
+        for (SelectionChangedListener listener : getListeners().getListeners(SelectionChangedListener.class)) {
+            listener.showData(object);
+        }
+    }
+
+    private void setEnabled(boolean enabled) {
+        getGui().setEnabledAllButtons(enabled);
     }
 
     public void notifyDatabaseChanged() {
@@ -225,11 +325,11 @@ public class KeePassController implements TreeSelectionListener {
     }
 
     // getter and setter
-    public Database getDatabase() {
+    public DomDatabaseWrapper getDatabase() {
         return database;
     }
 
-    public void setDatabase(Database database) {
+    public void setDatabase(DomDatabaseWrapper database) {
         this.database = database;
     }
 
@@ -243,6 +343,34 @@ public class KeePassController implements TreeSelectionListener {
 
     public static void setPasswordReset(Thread aPasswordReset) {
         passwordReset = aPasswordReset;
+    }
+
+    public File getDatabaseFile() {
+        return databaseFile;
+    }
+
+    public void setDatabaseFile(File databaseFile) {
+        this.databaseFile = databaseFile;
+    }
+
+    public byte[] getPassword() {
+        return password;
+    }
+
+    public void setPassword(byte[] password) {
+        this.password = password;
+    }
+
+    public KeePassGUI getGui() {
+        return gui;
+    }
+
+    public KeePassShowObjectGUI getShowObjectGui() {
+        return showObjectGui;
+    }
+
+    public void setShowObjectGui(KeePassShowObjectGUI showObjectGui) {
+        this.showObjectGui = showObjectGui;
     }
 
 }
