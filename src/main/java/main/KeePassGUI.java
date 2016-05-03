@@ -16,8 +16,10 @@
 package main;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.HeadlessException;
+import java.awt.TextField;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,6 +54,7 @@ public class KeePassGUI extends JFrame implements TableModelListener {
     private static final long serialVersionUID = 1L;
 
     private final List<ActionButton> topPanelButtons = new ArrayList<>();
+    private final TextField searchField;
 
     private final JTable dataTable;
 
@@ -75,6 +78,7 @@ public class KeePassGUI extends JFrame implements TableModelListener {
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
         Dimension preferredDimension = new Dimension(32, 32);
+        searchField = new TextField();
         for (ActionType type : ActionType.values()) {
             ActionButton button = new ActionButton(type);
             ImageIcon icon = ActionTypeHelper.getIcon(type);
@@ -85,6 +89,9 @@ public class KeePassGUI extends JFrame implements TableModelListener {
                 button.setText(type.toString());
             }
             button.setPreferredSize(preferredDimension);
+            if (type == ActionType.SEARCH) {
+                toolbar.add(searchField);
+            }
             toolbar.add(button);
             topPanelButtons.add(button);
             if (ActionTypeHelper.isSeperatorAfterwards(type)) {
@@ -105,6 +112,7 @@ public class KeePassGUI extends JFrame implements TableModelListener {
         // main window data table
         dataTable = new JTable(tableModel);
         dataTable.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        dataTable.setAutoCreateRowSorter(true);
         JScrollPane dataPane = new JScrollPane(dataTable);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
@@ -162,8 +170,12 @@ public class KeePassGUI extends JFrame implements TableModelListener {
         getDataTable().getParent().repaint();
     }
 
-    public static void showWarning(String title, String message) {
-        JOptionPane.showConfirmDialog(null, message, title, JOptionPane.PLAIN_MESSAGE);
+    public void showWarning(String title, String message) {
+        JOptionPane.showConfirmDialog(this, message, title, JOptionPane.PLAIN_MESSAGE);
+    }
+    
+    public static void showWarning(String title, String message, Component parentComponent) {
+        JOptionPane.showConfirmDialog(parentComponent, message, title, JOptionPane.PLAIN_MESSAGE);
     }
 
     public static boolean showCancelDialog(String title, String message) {
@@ -184,6 +196,10 @@ public class KeePassGUI extends JFrame implements TableModelListener {
 
     public JTable getDataTable() {
         return dataTable;
+    }
+
+    public TextField getSearchField() {
+        return searchField;
     }
 
 }

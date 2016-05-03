@@ -30,7 +30,7 @@ public class Main {
     private static final KeePassTree tree = new KeePassTree("root");
     private static final KeePassTableModel tableModel = new KeePassTableModel();
     private static final KeePassGUI gui = new KeePassGUI("KeePass 2", tree, tableModel);
-     private static final KeePassController controller = new KeePassController(gui);
+    private static final KeePassController controller = new KeePassController(gui, tree);
 
     /**
      * @param args the command line arguments
@@ -58,9 +58,16 @@ public class Main {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                if(e.getClickCount() >= 2){
-                    e.consume();
-                    getController().showTableSelect();
+                switch (e.getButton()) {
+                    case MouseEvent.BUTTON1:
+                        if (e.getClickCount() == 2) {
+                            e.consume();
+                            getController().showTableSelect();
+                        }
+                        break;
+                    case MouseEvent.BUTTON3:
+                        //todo menu for table entries
+                        break;
                 }
             }
 
@@ -84,9 +91,16 @@ public class Main {
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                if(e.getClickCount() >= 2){
-                    e.consume();
-                    getController().showTreeSelect(e);
+                switch (e.getButton()) {
+                    case MouseEvent.BUTTON1:
+                        if (e.getClickCount() == 2) {
+                            e.consume();
+                            getController().showTreeSelect(e);
+                        }
+                        break;
+                    case MouseEvent.BUTTON3:
+                        //todo menu for groups
+                        break;
                 }
             }
 
@@ -108,6 +122,7 @@ public class Main {
                     button.addActionListener((ActionEvent e) -> getController().save());
                     break;
                 case ADD:
+                    button.addActionListener((ActionEvent e) -> getController().add());
                     break;
                 case SHOW:
                     button.addActionListener((ActionEvent e) -> getController().showTableSelect());
@@ -125,6 +140,7 @@ public class Main {
                     button.addActionListener((ActionEvent e) -> getController().lock());
                     break;
                 case SEARCH:
+                    button.addActionListener((ActionEvent e) -> getController().search());
                     break;
                 case EXIT:
                     button.addActionListener((ActionEvent e) -> getController().exit());

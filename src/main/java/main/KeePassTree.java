@@ -45,7 +45,7 @@ public class KeePassTree extends JTree implements DatabaseChangedListener {
         DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
         root.removeAllChildren();
         if (null != event.getDatabase()) {
-            root.setUserObject(event.getDatabase().getRootGroup().getName());
+            root.setUserObject(new DatabaseObject(event.getDatabase().getRootGroup()));
             // search groups
             for (Group group : event.getDatabase().getRootGroup().getGroups()) {
                 DefaultMutableTreeNode branch = new DefaultMutableTreeNode(new DatabaseObject(group));
@@ -61,9 +61,20 @@ public class KeePassTree extends JTree implements DatabaseChangedListener {
                 DefaultMutableTreeNode leaf = new DefaultMutableTreeNode(new DatabaseObject(entry));
                 root.insert(leaf, root.getChildCount());
             }
+        } else {
+            root.setUserObject("root");
         }
         // reload (closes tree if update only)
         model.reload(root);
     }
-    
+
+    public static DatabaseObject getSelectedObject(JTree tree) {
+        DatabaseObject object = null;
+        DefaultMutableTreeNode node = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
+        if (null != node && null != node.getUserObject() && node.getUserObject().getClass().equals(DatabaseObject.class)) {
+            object = (DatabaseObject) node.getUserObject();
+        }
+        return object;
+    }
+
 }

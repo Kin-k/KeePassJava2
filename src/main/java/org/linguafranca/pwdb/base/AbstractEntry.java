@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package org.linguafranca.pwdb.base;
 
 import org.linguafranca.pwdb.Entry;
@@ -27,22 +26,22 @@ import org.linguafranca.pwdb.Group;
 public abstract class AbstractEntry implements Entry {
 
     @Override
-    public  boolean matchTitle(String text){
+    public boolean matchTitle(String text) {
         return (getTitle().toLowerCase().contains(text.toLowerCase()));
     }
 
     @Override
-    public  boolean matchNotes(String text){
-        return (getNotes().toLowerCase().contains(text.toLowerCase()));
+    public boolean matchNotes(String text) {
+        return null != getNotes() ? (getNotes().toLowerCase().contains(text.toLowerCase())) : false;
     }
 
     @Override
-    public  boolean matchUsername(String text){
+    public boolean matchUsername(String text) {
         return (getUsername().toLowerCase().contains(text.toLowerCase()));
     }
 
     @Override
-    public  boolean matchUrl(String text){
+    public boolean matchUrl(String text) {
         return (getUrl().toLowerCase().contains(text.toLowerCase()));
     }
 
@@ -66,6 +65,7 @@ public abstract class AbstractEntry implements Entry {
         return result + getTitle();
     }
 
+    @Override
     public String toString() {
         return this.getPath();
     }

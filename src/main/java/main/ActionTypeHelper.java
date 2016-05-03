@@ -40,9 +40,9 @@ public class ActionTypeHelper {
         }
         return false;
     }
-    
-    public static boolean isAlwaysActive(ActionButton button){
-        switch (button.getType()){
+
+    public static boolean isAlwaysActive(ActionButton button) {
+        switch (button.getType()) {
             case COPY_USER:
             case COPY_PW:
             case EXIT:
@@ -109,6 +109,10 @@ public class ActionTypeHelper {
                 }
                 break;
             case SEARCH:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("system-search.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "Exit");
+                }
                 break;
             default:
                 throw new AssertionError(type.name());

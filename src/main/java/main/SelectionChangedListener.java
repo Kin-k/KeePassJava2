@@ -16,6 +16,8 @@
 package main;
 
 import java.util.EventListener;
+import java.util.List;
+import org.linguafranca.pwdb.Entry;
 
 /**
  *
@@ -24,5 +26,7 @@ import java.util.EventListener;
 public interface SelectionChangedListener extends EventListener {
 
     void showData(DatabaseObject object);
+    
+    void showData(List<Entry> entries);
 
 }

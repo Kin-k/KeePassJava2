@@ -103,6 +103,15 @@ public class KeePassTableModel implements TableModel, SelectionChangedListener {
     }
 
     @Override
+    public void showData(List<Entry> entries) {
+        data.clear();
+        for (Entry entry : entries) {
+            data.add(new DatabaseObject(entry));
+        }
+        tableChanged();
+    }
+
+    @Override
     public Object getValueAt(int rowIndex, int columnIndex) {
         String returnValue = "";
         try {

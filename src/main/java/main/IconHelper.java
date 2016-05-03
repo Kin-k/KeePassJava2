@@ -25,23 +25,65 @@ import org.linguafranca.pwdb.Icon;
  */
 public class IconHelper {
 
-    private static ImageIcon[] imageIconList = new ImageIcon[100];
+    public static final int NUMBER_OF_ICON = 69;
+    private static final ImageIcon[] imageIconList = new ImageIcon[NUMBER_OF_ICON];
+    private static int imagesLoaded = 0;
 
     public static ImageIcon getImageIcon(Icon icon) {
         // load image (manual lazy load)
         ImageIcon imageIcon = null;
-        if (null != icon && icon.getIndex() >= 0 && icon.getIndex() < imageIconList.length) {
-            imageIcon = imageIconList[icon.getIndex()];
+        if (null != icon && icon.getIndex() >= 0 && icon.getIndex() < NUMBER_OF_ICON) {
+            imageIcon = getImageIconList()[icon.getIndex()];
             if (null == imageIcon) {
-                String imageName = String.format("icons/database/%02d.png", icon.getIndex());
-                URL ressource = ActionTypeHelper.class.getClassLoader().getResource(imageName);
-                if (null != ressource) {
-                    imageIcon = new ImageIcon(ressource, imageName);
-                    imageIconList[icon.getIndex()] = imageIcon;
-                }
+                imageIcon = getImageIcon(icon.getIndex());
             }
         }
         return imageIcon;
+    }
+
+    public static ImageIcon getImageIcon(int index) {
+        ImageIcon imageIcon = null;
+        String imagePath = String.format("icons/database/%02d.png", index);
+        URL ressource = ActionTypeHelper.class.getClassLoader().getResource(imagePath);
+        if (null != ressource) {
+            imageIcon = new ImageIcon(ressource, imagePath);
+            imageIcon.setDescription(String.format("%02d", index));
+            getImageIconList()[index] = imageIcon;
+            setImagesLoaded(getImagesLoaded() + 1);
+        }
+        return imageIcon;
+    }
+
+    public static void loadAllImages() {
+        if (getImagesLoaded() < NUMBER_OF_ICON) {
+            for (int i = 0; i < NUMBER_OF_ICON; i++) {
+                if (null == getImageIconList()[i]) {
+                    getImageIcon(i);
+                }
+            }
+        }
+    }
+
+    public static int indexOf(ImageIcon image) {
+        int index = -1;
+        for (int i = 0; i < NUMBER_OF_ICON; i++) {
+            if (null != getImageIconList()[i] && image == getImageIconList()[i]) {
+                return i;
+            }
+        }
+        return index;
+    }
+
+    public static ImageIcon[] getImageIconList() {
+        return imageIconList;
+    }
+
+    public static int getImagesLoaded() {
+        return imagesLoaded;
+    }
+
+    public static void setImagesLoaded(int aImagesLoaded) {
+        imagesLoaded = aImagesLoaded;
     }
 
 }
