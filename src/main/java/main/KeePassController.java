@@ -15,9 +15,12 @@
  */
 package main;
 
+import java.awt.Desktop;
+import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
@@ -26,15 +29,23 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EventListener;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JEditorPane;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.event.EventListenerList;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import org.linguafranca.pwdb.Entry;
@@ -91,7 +102,7 @@ public class KeePassController implements TreeSelectionListener {
                 path = directPath.substring(0, lastSlash);
             }
         }
-        open(KeePassGUI.chooseFile(path));
+        open(KeePassGUI.chooseFile(getGui(), path));
     }
 
     public void open(String path) {
@@ -101,7 +112,7 @@ public class KeePassController implements TreeSelectionListener {
     private void open(final File file) {
         if (null != file) {
             // enter password
-            setPassword(KeePassGUI.enterPassword());
+            setPassword(KeePassGUI.enterPassword(getGui()));
             if (null != getPassword()) {
                 setEnabled(false);
                 // start worker
@@ -226,8 +237,20 @@ public class KeePassController implements TreeSelectionListener {
         }
     }
 
+    public void showTreeSelect() {
+        showTreeSelect(getTree());
+    }
+
     public void showTreeSelect(MouseEvent e) {
         JTree tree = (JTree) e.getSource();
+        showTreeSelect(tree);
+    }
+
+    public void showTreeSelect(ActionEvent e) {
+        showTreeSelect(getTree());
+    }
+
+    private void showTreeSelect(JTree tree) {
         DatabaseObject object = KeePassTree.getSelectedObject(tree);
         if (null != object && (object.isEntry() || object.isGroup())) {
             show(object);
@@ -337,7 +360,11 @@ public class KeePassController implements TreeSelectionListener {
     }
 
     public void search() {
-        final String searchQuery = getGui().getSearchField().getText();
+        String searchQuery = getGui().getSearchField().getText();
+        search(searchQuery);
+    }
+
+    public void search(String searchQuery) {
         final List<Entry> matchingEntries = new ArrayList<>();
         getDatabase().visit(new Visitor() {
 
@@ -415,6 +442,73 @@ public class KeePassController implements TreeSelectionListener {
             }
         }
         System.exit(0);
+    }
+
+    public void showAboutDialog() {
+        // https://stackoverflow.com/questions/8348063/clickable-links-in-joptionpane
+        
+        // for copying style
+        JLabel label = new JLabel();
+        Font font = label.getFont();
+
+        // create some css from the label's font
+        StringBuffer style = new StringBuffer("font-family:" + font.getFamily() + ";");
+        style.append("font-weight:").append(font.isBold() ? "bold" : "normal").append(";");
+        style.append("font-size:").append(font.getSize()).append("pt;");
+
+        // html content
+        String lineSeperator = "<br></br>";
+        String message = "KeePassJava2 v 0.0" + lineSeperator + lineSeperator
+                + "Database API by jorabin" + lineSeperator
+                + "<a href='https://github.com/jorabin/KeePassJava2'>https://github.com/jorabin/KeePassJava2</a>" + lineSeperator
+                + "GUI by SpecOp0 (inspired by KeePass2)" + lineSeperator
+                + "<a href='https://github.com/specop0/KeePassJava2'>https://github.com/specop0/KeePassJava2</a>" + lineSeperator + lineSeperator
+                + "LICENSE: Apache License, Version 2.0" + lineSeperator
+                + "<a href='http://www.apache.org/licenses/LICENSE-2.0'>http://www.apache.org/licenses/LICENSE-2.0</a>";
+        JEditorPane editorPane = new JEditorPane("text/html", "<html><body style=\"" + style + "\">"
+                + message
+                + "</body></html>");
+
+        // handle link events
+        editorPane.addHyperlinkListener(new HyperlinkListener() {
+
+            @Override
+            public void hyperlinkUpdate(HyperlinkEvent e) {
+                if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED)) {
+                    KeePassController.openWebpage(e.getURL());
+                }
+            }
+        });
+        editorPane.setEditable(false);
+        editorPane.setBackground(label.getBackground());
+
+        JOptionPane.showMessageDialog(getGui(), editorPane, "About", JOptionPane.PLAIN_MESSAGE, null);
+    }
+
+    public static void openKeePassWebpage() {
+        try {
+            openWebpage(new URI("http://keepass.info/"));
+        } catch (URISyntaxException ex) {
+        }
+    }
+
+    private static void openWebpage(URL url) {
+        try {
+            openWebpage(url.toURI());
+        } catch (URISyntaxException ex) {
+            Logger.getLogger(KeePassController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private static void openWebpage(URI uri) {
+        Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
+        if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
+            try {
+                desktop.browse(uri);
+            } catch (Exception ex) {
+                Logger.getLogger(KeePassController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 
     // getter and setter

@@ -15,11 +15,13 @@
  */
 package main;
 
+import helper.IRobot;
 import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.GridLayout;
+import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
@@ -58,12 +60,9 @@ public abstract class KeePassShowObjectGUI extends JFrame {
         saveButton.addActionListener((ActionEvent e) -> setSaveObjectFlag());
         exitButton = new JButton("Cancel");
         exitButton.addActionListener((ActionEvent e) -> dispose());
-        JButton dummyButton = new JButton("");
-        dummyButton.setVisible(false);
 
         JPanel bottomButtonPanel = new JPanel();
-        bottomButtonPanel.setLayout(new GridLayout(1, 3));
-        bottomButtonPanel.add(dummyButton);
+        bottomButtonPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
         bottomButtonPanel.add(saveButton);
         bottomButtonPanel.add(exitButton);
 
@@ -73,6 +72,7 @@ public abstract class KeePassShowObjectGUI extends JFrame {
         this.setSize(500, 450);
         this.setLocationRelativeTo(parent);
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        bottomButtonPanel.registerKeyboardAction((ActionEvent e) -> dispose(), IRobot.STROKE_ESCAPE, JComponent.WHEN_IN_FOCUSED_WINDOW);
         this.setVisible(true);
     }
 

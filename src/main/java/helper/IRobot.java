@@ -17,8 +17,11 @@ package helper;
 
 import java.awt.AWTException;
 import java.awt.Robot;
+import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import static java.awt.event.KeyEvent.*;
+import javax.swing.KeyStroke;
 
 /**
  *
@@ -27,6 +30,10 @@ import static java.awt.event.KeyEvent.*;
 public class IRobot extends Robot {
 
     private final long sleepAfterClick = 200;
+
+    public final static KeyStroke STROKE_CTRL_AND_COPY = KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK, false);
+    public final static KeyStroke STROKE_ESCAPE = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+    public final static KeyStroke STROKE_ENTER = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
 
     public IRobot() throws AWTException {
         super();
@@ -49,9 +56,9 @@ public class IRobot extends Robot {
         } catch (InterruptedException e) {
         }
     }
-    
-    public void type(String string){
-        for(char character : string.toCharArray()){
+
+    public void type(String string) {
+        for (char character : string.toCharArray()) {
             type(character);
         }
     }

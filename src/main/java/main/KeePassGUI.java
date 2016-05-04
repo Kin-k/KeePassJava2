@@ -55,6 +55,11 @@ public class KeePassGUI extends JFrame implements TableModelListener {
 
     private final List<ActionButton> topPanelButtons = new ArrayList<>();
     private final TextField searchField;
+    private final JScrollPane treePane;
+    private final JScrollPane dataPane;
+
+    private final List<JMenuType> menuIndex = new ArrayList<>();
+    private final List<JMenuItemType> menuItems = new ArrayList<>();
 
     private final JTable dataTable;
 
@@ -62,18 +67,32 @@ public class KeePassGUI extends JFrame implements TableModelListener {
         super(title);
         this.setLayout(new BorderLayout());
 
+        // =========================
         // top menu bar
         JMenuBar menuBar = new JMenuBar();
-        String[] menuArray = new String[]{"Data", "Help"};
-        for (String menuName : menuArray) {
-            JMenu menu = new JMenu(menuName);
-            for (int i = 0; i < 5; i++) {
-                JMenuItem item = new JMenuItem("test" + i);
-                menu.add(item);
-            }
+        for (MenuType type : MenuType.values()) {
+            JMenuType menu = new JMenuType(type);
+            menuIndex.add(menu);
             menuBar.add(menu);
         }
+        for (MenuItemType itemType : MenuItemType.values()) {
+            MenuType menuType = MenuTypeHelper.getMenu(itemType);
+            if (MenuTypeHelper.isImplemented(itemType)) {
+                for (JMenuType menu : menuIndex) {
+                    if (menu.getType() == menuType) {
+                        JMenuItemType menuItem = new JMenuItemType(itemType);
+                        menu.add(menuItem);
+                        menuItems.add(menuItem);
+                        if (MenuTypeHelper.isSeperatorAfterward(itemType)) {
+                            menu.addSeparator();
+                        }
+                        break;
+                    }
+                }
+            }
+        }
 
+        // =========================
         // top tool bar
         JToolBar toolbar = new JToolBar();
         toolbar.setFloatable(false);
@@ -104,16 +123,18 @@ public class KeePassGUI extends JFrame implements TableModelListener {
         topPanel.add(toolbar, BorderLayout.CENTER);
         this.add(topPanel, BorderLayout.PAGE_START);
 
+        // =========================
+        // main window
         // main window entry tree
         DefaultTreeCellRenderer renderer = new KeePassTreeRenderer();
         tree.setCellRenderer(renderer);
-        JScrollPane treePane = new JScrollPane(tree);
+        treePane = new JScrollPane(tree);
 
         // main window data table
         dataTable = new JTable(tableModel);
         dataTable.getSelectionModel().setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         dataTable.setAutoCreateRowSorter(true);
-        JScrollPane dataPane = new JScrollPane(dataTable);
+        dataPane = new JScrollPane(dataTable);
 
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
                 treePane, dataPane);
@@ -128,30 +149,38 @@ public class KeePassGUI extends JFrame implements TableModelListener {
         this.setVisible(true);
     }
 
+    public List<JMenuType> getMenuIndex() {
+        return menuIndex;
+    }
+
+    public List<JMenuItemType> getMenuItems() {
+        return menuItems;
+    }
+
     public void setEnabledAllButtons(boolean enabled) {
         getTopPanelButtons().stream().filter((ActionButton button) -> !ActionTypeHelper.isAlwaysActive(button)).forEach((ActionButton button) -> {
             button.setEnabled(enabled);
         });
     }
 
-    public static File chooseFile() {
-        return chooseFile(".");
+    public static File chooseFile(Component parentComponent) {
+        return chooseFile(parentComponent, ".");
     }
 
-    public static File chooseFile(String path) {
+    public static File chooseFile(Component parentComponent, String path) {
         JFileChooser chooser = new JFileChooser(path);
         FileNameExtensionFilter filter = new FileNameExtensionFilter("KeePass Database", "kdb", "kdbx");
         chooser.setFileFilter(filter);
-        int returnValueFile = chooser.showOpenDialog(null);
+        int returnValueFile = chooser.showOpenDialog(parentComponent);
         if (returnValueFile == JFileChooser.APPROVE_OPTION) {
             return chooser.getSelectedFile().getAbsoluteFile();
         }
         return null;
     }
 
-    static byte[] enterPassword() {
+    static byte[] enterPassword(Component parentComponent) {
         JPasswordField passwordField = new JPasswordField();
-        int returnValuePassword = JOptionPane.showConfirmDialog(null, passwordField, "Enter Password", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+        int returnValuePassword = JOptionPane.showConfirmDialog(parentComponent, passwordField, "Enter Password", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 
         if (returnValuePassword == JOptionPane.OK_OPTION) {
             return new String(passwordField.getPassword()).getBytes();
@@ -173,7 +202,7 @@ public class KeePassGUI extends JFrame implements TableModelListener {
     public void showWarning(String title, String message) {
         JOptionPane.showConfirmDialog(this, message, title, JOptionPane.PLAIN_MESSAGE);
     }
-    
+
     public static void showWarning(String title, String message, Component parentComponent) {
         JOptionPane.showConfirmDialog(parentComponent, message, title, JOptionPane.PLAIN_MESSAGE);
     }
@@ -200,6 +229,14 @@ public class KeePassGUI extends JFrame implements TableModelListener {
 
     public TextField getSearchField() {
         return searchField;
+    }
+
+    public JScrollPane getTreePane() {
+        return treePane;
+    }
+
+    public JScrollPane getDataPane() {
+        return dataPane;
     }
 
 }

@@ -80,7 +80,7 @@ public class KeePassGUITest {
 
             @Override
             public Object runGUITest() {
-                return instance.chooseFile();
+                return instance.chooseFile(instance);
             }
         };
         worker.start();
@@ -130,7 +130,7 @@ public class KeePassGUITest {
 
             @Override
             public Object runGUITest() {
-                return instance.chooseFile(path);
+                return instance.chooseFile(instance, path);
             }
         };
         worker.start();
@@ -170,7 +170,7 @@ public class KeePassGUITest {
 
             @Override
             public Object runGUITest() {
-                return instance.enterPassword();
+                return instance.enterPassword(instance);
             }
         };
         worker.start();

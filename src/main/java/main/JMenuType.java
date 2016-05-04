@@ -15,27 +15,25 @@
  */
 package main;
 
-import java.awt.Component;
-import java.awt.Frame;
-import javax.swing.JOptionPane;
+import javax.swing.JMenu;
 
 /**
  *
  * @author SpecOp0
  */
-public class ChooseIconDialog extends JOptionPane {
+public class JMenuType extends JMenu {
 
     private static final long serialVersionUID = 1L;
 
-    public static int showChooseIconDialog(Component parentComponent, String title, int iconIndex) {
-        int selectedIndex = -1;
-        // let user select icon
-        IconDialog iconDialog = new IconDialog((Frame) parentComponent, title, iconIndex);
-        iconDialog.setVisible(true);
-        if (iconDialog.getClosingAction() == JOptionPane.OK_OPTION) {
-            selectedIndex = iconDialog.getSelectedButton();
-        }
-        return selectedIndex;
+    private final MenuType type;
+
+    public JMenuType(MenuType type) {
+        super(type.toString());
+        this.type = type;
+    }
+
+    public MenuType getType() {
+        return type;
     }
 
 }

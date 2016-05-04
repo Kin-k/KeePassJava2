@@ -33,23 +33,22 @@ public class IconHelper {
         // load image (manual lazy load)
         ImageIcon imageIcon = null;
         if (null != icon && icon.getIndex() >= 0 && icon.getIndex() < NUMBER_OF_ICON) {
-            imageIcon = getImageIconList()[icon.getIndex()];
-            if (null == imageIcon) {
-                imageIcon = getImageIcon(icon.getIndex());
-            }
+            imageIcon = getImageIcon(icon.getIndex());
         }
         return imageIcon;
     }
 
     public static ImageIcon getImageIcon(int index) {
-        ImageIcon imageIcon = null;
-        String imagePath = String.format("icons/database/%02d.png", index);
-        URL ressource = ActionTypeHelper.class.getClassLoader().getResource(imagePath);
-        if (null != ressource) {
-            imageIcon = new ImageIcon(ressource, imagePath);
-            imageIcon.setDescription(String.format("%02d", index));
-            getImageIconList()[index] = imageIcon;
-            setImagesLoaded(getImagesLoaded() + 1);
+        ImageIcon imageIcon = getImageIconList()[index];
+        if (null == imageIcon) {
+            String imagePath = String.format("icons/database/%02d.png", index);
+            URL ressource = ActionTypeHelper.class.getClassLoader().getResource(imagePath);
+            if (null != ressource) {
+                imageIcon = new ImageIcon(ressource, imagePath);
+                imageIcon.setDescription(String.format("%02d", index));
+                getImageIconList()[index] = imageIcon;
+                setImagesLoaded(getImagesLoaded() + 1);
+            }
         }
         return imageIcon;
     }
@@ -57,9 +56,7 @@ public class IconHelper {
     public static void loadAllImages() {
         if (getImagesLoaded() < NUMBER_OF_ICON) {
             for (int i = 0; i < NUMBER_OF_ICON; i++) {
-                if (null == getImageIconList()[i]) {
-                    getImageIcon(i);
-                }
+                getImageIcon(i);
             }
         }
     }
@@ -82,7 +79,7 @@ public class IconHelper {
         return imagesLoaded;
     }
 
-    public static void setImagesLoaded(int aImagesLoaded) {
+    public synchronized static void setImagesLoaded(int aImagesLoaded) {
         imagesLoaded = aImagesLoaded;
     }
 

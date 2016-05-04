@@ -15,11 +15,16 @@
  */
 package main;
 
+import helper.IRobot;
 import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import javax.swing.InputMap;
+import javax.swing.JComponent;
+import javax.swing.KeyStroke;
 
 /**
  *
@@ -156,6 +161,92 @@ public class Main {
                 getController().exit();
             }
         });
+        // add key actions for tree on the left and table on the right
+        getGui().getTreePane().registerKeyboardAction((ActionEvent e) -> getController().showTreeSelect(e), IRobot.STROKE_ENTER, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        getGui().getDataTable().registerKeyboardAction((ActionEvent e) -> getController().copyPassword(), IRobot.STROKE_CTRL_AND_COPY, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        getGui().getDataTable().registerKeyboardAction((ActionEvent e) -> getController().showTableSelect(), IRobot.STROKE_ENTER, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        // add actions to menu
+        for (JMenuItemType menuItem : getGui().getMenuItems()) {
+            switch (menuItem.getType()) {
+                case NEW:
+                    break;
+                case OPEN:
+                    menuItem.addActionListener((ActionEvent e) -> getController().open());
+                    break;
+                case OPEN_RECENT:
+                    break;
+                case CLOSE:
+                    menuItem.addActionListener((ActionEvent e) -> getController().lock());
+                    break;
+                case SAVE:
+                    menuItem.addActionListener((ActionEvent e) -> getController().save());
+                    break;
+                case SAVE_AS:
+                    break;
+                case DATABASE_SETTINGS:
+                    break;
+                case CHANGE_MASTER_KEY:
+                    break;
+                case PRINT:
+                    break;
+                case IMPORT:
+                    break;
+                case EXPORT:
+                    break;
+                case SYNCHRONIZE:
+                    break;
+                case LOCK_WORKSPACE:
+                    menuItem.addActionListener((ActionEvent e) -> getController().lock());
+                    break;
+                case EXIT:
+                    menuItem.addActionListener((ActionEvent e) -> getController().exit());
+                    break;
+                case ADD_GROUP:
+                    break;
+                case EDIT_GROUP:
+                    menuItem.addActionListener((ActionEvent e) -> getController().showTreeSelect());
+                    break;
+                case DELETE_GROUP:
+                    break;
+                case ADD_ENTRY:
+                    menuItem.addActionListener((ActionEvent e) -> getController().add());
+                    break;
+                case EDIT_ENTRY:
+                    menuItem.addActionListener((ActionEvent e) -> getController().showTreeSelect());
+                    break;
+                case DUPLICATE_ENTRY:
+                    break;
+                case DELETE_ENTRY:
+                    break;
+                case SELECT_ALL:
+                    break;
+                case SHOW_ALL_ENTRIES:
+                    menuItem.addActionListener((ActionEvent e) -> getController().search(""));
+                    break;
+                case SHOW_ALL_EXPIRED_ENTIRES:
+                    break;
+                case SHOW_ENTRIES_BY_TAG:
+                    break;
+                case FIND:
+                    break;
+                case HELP_CONTENTS:
+                    break;
+                case HELP_SOURCE:
+                    break;
+                case KEEPASS_WEBSITE:
+                    menuItem.addActionListener((ActionEvent e) -> KeePassController.openKeePassWebpage());
+                    break;
+                case DONATE:
+                    break;
+                case CHECK_FOR_UPDATES:
+                    break;
+                case ABOUT_KEEPASS:
+                     menuItem.addActionListener((ActionEvent e) -> getController().showAboutDialog());
+                    break;
+                default:
+                    throw new AssertionError(menuItem.getType().name());
+            }
+        }
 
         DatabasePath databasePath = new DatabasePath();
 
