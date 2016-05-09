@@ -26,9 +26,7 @@ import java.util.List;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
-import javax.swing.JMenu;
 import javax.swing.JMenuBar;
-import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPasswordField;
@@ -83,6 +81,11 @@ public class KeePassGUI extends JFrame implements TableModelListener {
                         JMenuItemType menuItem = new JMenuItemType(itemType);
                         menu.add(menuItem);
                         menuItems.add(menuItem);
+                        ImageIcon icon = MenuTypeHelper.getIcon(itemType);
+                        if (null != icon) {
+                            menuItem.setIcon(icon);
+                            menuItem.setText(icon.getDescription());
+                        }
                         if (MenuTypeHelper.isSeperatorAfterward(itemType)) {
                             menu.addSeparator();
                         }
@@ -163,15 +166,20 @@ public class KeePassGUI extends JFrame implements TableModelListener {
         });
     }
 
-    public static File chooseFile(Component parentComponent) {
-        return chooseFile(parentComponent, ".");
+    public static File chooseFile(Component parentComponent, boolean isOpen) {
+        return chooseFile(parentComponent, ".", isOpen);
     }
 
-    public static File chooseFile(Component parentComponent, String path) {
+    public static File chooseFile(Component parentComponent, String path, boolean isOpen) {
         JFileChooser chooser = new JFileChooser(path);
         FileNameExtensionFilter filter = new FileNameExtensionFilter("KeePass Database", "kdb", "kdbx");
         chooser.setFileFilter(filter);
-        int returnValueFile = chooser.showOpenDialog(parentComponent);
+        int returnValueFile;
+        if (isOpen) {
+            returnValueFile = chooser.showOpenDialog(parentComponent);
+        } else {
+            returnValueFile = chooser.showSaveDialog(parentComponent);
+        }
         if (returnValueFile == JFileChooser.APPROVE_OPTION) {
             return chooser.getSelectedFile().getAbsoluteFile();
         }
@@ -207,8 +215,8 @@ public class KeePassGUI extends JFrame implements TableModelListener {
         JOptionPane.showConfirmDialog(parentComponent, message, title, JOptionPane.PLAIN_MESSAGE);
     }
 
-    public static boolean showCancelDialog(String title, String message) {
-        int returnValue = JOptionPane.showConfirmDialog(null, message, title, JOptionPane.YES_NO_CANCEL_OPTION);
+    public static boolean showCancelDialog(String title, String message, Component parentComponent) {
+        int returnValue = JOptionPane.showConfirmDialog(parentComponent, message, title, JOptionPane.YES_NO_CANCEL_OPTION);
         return returnValue != JOptionPane.YES_OPTION;
     }
 

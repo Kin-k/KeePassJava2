@@ -29,6 +29,9 @@ public class IconHelper {
     private static final ImageIcon[] imageIconList = new ImageIcon[NUMBER_OF_ICON];
     private static int imagesLoaded = 0;
 
+    private static ImageIcon passwordShowIcon = null;
+    private static ImageIcon passwordHideIcon = null;
+
     public static ImageIcon getImageIcon(Icon icon) {
         // load image (manual lazy load)
         ImageIcon imageIcon = null;
@@ -69,6 +72,28 @@ public class IconHelper {
             }
         }
         return index;
+    }
+
+    public static ImageIcon getPasswordIcon(boolean isVisible) {
+        ImageIcon imageIcon = null;
+        if (isVisible) {
+            if (null == passwordHideIcon) {
+                URL ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/password-show-off.png");
+                if (null != ressource) {
+                    passwordHideIcon = new ImageIcon(ressource, "Hide Password");
+                }
+            }
+            imageIcon = passwordHideIcon;
+        } else {
+            if (null == passwordShowIcon) {
+                URL ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/password-show-on.png");
+                if (null != ressource) {
+                    passwordShowIcon = new ImageIcon(ressource, "Show Password");
+                }
+            }
+            imageIcon = passwordShowIcon;
+        }
+        return imageIcon;
     }
 
     public static ImageIcon[] getImageIconList() {

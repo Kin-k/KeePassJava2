@@ -28,7 +28,7 @@ public class JMenuType extends JMenu {
     private final MenuType type;
 
     public JMenuType(MenuType type) {
-        super(type.toString());
+        super(MenuTypeHelper.getName(type));
         this.type = type;
     }
 

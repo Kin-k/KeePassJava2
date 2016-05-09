@@ -15,6 +15,9 @@
  */
 package main;
 
+import java.net.URL;
+import javax.swing.ImageIcon;
+
 enum MenuType {
 
     FILE, EDIT, VIEW, TOOLS, HELP
@@ -125,5 +128,170 @@ public class MenuTypeHelper {
 
     public static boolean isAlwaysActive(MenuItemType type) {
         return false;
+    }
+
+    public static String getName(MenuType type) {
+        String name = type.toString();
+        switch (type) {
+            case FILE:
+                name = "File";
+                break;
+            case EDIT:
+                name = "Edit";
+                break;
+            case VIEW:
+                name = "View";
+                break;
+            case TOOLS:
+                name = "Tools";
+                break;
+            case HELP:
+                name = "Help";
+                break;
+            default:
+                throw new AssertionError(type.name());
+        }
+        return name;
+    }
+
+    public static ImageIcon getIcon(MenuItemType type) {
+        URL ressource;
+        switch (type) {
+            case NEW:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/document-new.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "New Database");
+                }
+                break;
+            case OPEN:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/document-open.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "Open Database");
+                }
+                break;
+            case OPEN_RECENT:
+                break;
+            case CLOSE:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/document-close.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "Close Database");
+                }
+                break;
+            case SAVE:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/document-save.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "Save");
+                }
+                break;
+            case SAVE_AS:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/document-save-as.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "Save As");
+                }
+                break;
+            case DATABASE_SETTINGS:
+                break;
+            case CHANGE_MASTER_KEY:
+                break;
+            case PRINT:
+                break;
+            case IMPORT:
+                break;
+            case EXPORT:
+                break;
+            case SYNCHRONIZE:
+                break;
+            case LOCK_WORKSPACE:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/document-encrypt.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "Lock Workspace");
+                }
+                break;
+            case EXIT:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/application-exit.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "Exit Program");
+                }
+                break;
+            case ADD_GROUP:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/group-new.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "Add Group");
+                }
+                break;
+            case EDIT_GROUP:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/group-edit.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "Edit Group");
+                }
+                break;
+            case DELETE_GROUP:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/group-delete.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "Delete Group");
+                }
+                break;
+            case ADD_ENTRY:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/entry-new.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "Add Entry");
+                }
+                break;
+            case EDIT_ENTRY:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/entry-edit.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "Edit Entry");
+                }
+                break;
+            case DUPLICATE_ENTRY:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/entry-clone.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "Duplicate Entry");
+                }
+                break;
+            case DELETE_ENTRY:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/entry-delete.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "Delete Entry");
+                }
+                break;
+            case SELECT_ALL:
+                break;
+            case SHOW_ALL_ENTRIES:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/system-search.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "Show all Entries");
+                }
+                break;
+            case SHOW_ALL_EXPIRED_ENTIRES:
+                break;
+            case SHOW_ENTRIES_BY_TAG:
+                break;
+            case FIND:
+                break;
+            case HELP_CONTENTS:
+                break;
+            case HELP_SOURCE:
+                break;
+            case KEEPASS_WEBSITE:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/about-website.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "KeePass Website");
+                }
+                break;
+            case DONATE:
+                break;
+            case CHECK_FOR_UPDATES:
+                break;
+            case ABOUT_KEEPASS:
+                ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/help-about.png");
+                if (null != ressource) {
+                    return new ImageIcon(ressource, "About KeePass");
+                }
+                break;
+            default:
+                throw new AssertionError(type.name());
+        }
+        return null;
     }
 }

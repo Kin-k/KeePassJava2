@@ -51,6 +51,7 @@ public class KeePassShowEntryGUI extends KeePassShowObjectGUI {
     private final TextField passwordQuality;
     private final TextField urlField;
     private final JTextArea notesField;
+    private final JButton clearPasswordSwitcherButton;
 
     public KeePassShowEntryGUI(JFrame parent) {
         super(parent, "New Entry");
@@ -121,12 +122,15 @@ public class KeePassShowEntryGUI extends KeePassShowObjectGUI {
                 passwordFieldSize,
                 LABEL_HEIGHT);
         passwordFieldClear.setVisible(false);
-        JButton clearPasswordSwitcherButton = new JButton();
+        clearPasswordSwitcherButton = new JButton();
         clearPasswordSwitcherButton.setBounds(LABEL_WIDTH + PADDING_LEFT + passwordFieldSize + clearPasswordSwitcherPadding,
                 getYoffset(index),
                 clearPasswordSwitcherWidth,
                 LABEL_HEIGHT);
         clearPasswordSwitcherButton.addActionListener((ActionEvent e) -> switchPasswordVisibility());
+        if (null != IconHelper.getPasswordIcon(false)) {
+            clearPasswordSwitcherButton.setIcon(IconHelper.getPasswordIcon(false));
+        }
         centerPanel.add(passwordLabel);
         centerPanel.add(passwordField);
         centerPanel.add(passwordFieldClear);
@@ -305,12 +309,15 @@ public class KeePassShowEntryGUI extends KeePassShowObjectGUI {
                 passwordFieldSize,
                 LABEL_HEIGHT);
         passwordFieldClear.setVisible(false);
-        JButton clearPasswordSwitcherButton = new JButton();
+        clearPasswordSwitcherButton = new JButton();
         clearPasswordSwitcherButton.setBounds(LABEL_WIDTH + PADDING_LEFT + passwordFieldSize + clearPasswordSwitcherPadding,
                 getYoffset(index),
                 clearPasswordSwitcherWidth,
                 LABEL_HEIGHT);
         clearPasswordSwitcherButton.addActionListener((ActionEvent e) -> switchPasswordVisibility());
+        if (null != IconHelper.getPasswordIcon(false)) {
+            clearPasswordSwitcherButton.setIcon(IconHelper.getPasswordIcon(false));
+        }
         centerPanel.add(passwordLabel);
         centerPanel.add(passwordField);
         centerPanel.add(passwordFieldClear);
@@ -487,6 +494,9 @@ public class KeePassShowEntryGUI extends KeePassShowObjectGUI {
         getPasswordField().setVisible(isClearPasswordVisible);
         getPasswordFieldRepeat().setVisible(isClearPasswordVisible);
         getPasswordFieldClear().setVisible(!isClearPasswordVisible);
+        if (null != IconHelper.getPasswordIcon(!isClearPasswordVisible)) {
+            getClearPasswordSwitcherButton().setIcon(IconHelper.getPasswordIcon(!isClearPasswordVisible));
+        }
     }
 
     private String computerPasswordQuality(char[] password) {
@@ -536,4 +546,9 @@ public class KeePassShowEntryGUI extends KeePassShowObjectGUI {
     public JTextArea getNotesField() {
         return notesField;
     }
+
+    public JButton getClearPasswordSwitcherButton() {
+        return clearPasswordSwitcherButton;
+    }
+
 }

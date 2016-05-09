@@ -163,12 +163,16 @@ public class Main {
         });
         // add key actions for tree on the left and table on the right
         getGui().getTreePane().registerKeyboardAction((ActionEvent e) -> getController().showTreeSelect(e), IRobot.STROKE_ENTER, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        
         getGui().getDataTable().registerKeyboardAction((ActionEvent e) -> getController().copyPassword(), IRobot.STROKE_CTRL_AND_COPY, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         getGui().getDataTable().registerKeyboardAction((ActionEvent e) -> getController().showTableSelect(), IRobot.STROKE_ENTER, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        getGui().getDataTable().registerKeyboardAction((ActionEvent e) -> getController().deleteEntry(), IRobot.STROKE_ENTF, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        getGui().getDataTable().registerKeyboardAction((ActionEvent e) -> getController().deleteEntry(), IRobot.STROKE_DELETE, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         // add actions to menu
         for (JMenuItemType menuItem : getGui().getMenuItems()) {
             switch (menuItem.getType()) {
                 case NEW:
+                    menuItem.addActionListener((ActionEvent e) -> getController().newDatabase());
                     break;
                 case OPEN:
                     menuItem.addActionListener((ActionEvent e) -> getController().open());
@@ -182,6 +186,7 @@ public class Main {
                     menuItem.addActionListener((ActionEvent e) -> getController().save());
                     break;
                 case SAVE_AS:
+                    menuItem.addActionListener((ActionEvent e) -> getController().saveAs());
                     break;
                 case DATABASE_SETTINGS:
                     break;
@@ -241,7 +246,7 @@ public class Main {
                 case CHECK_FOR_UPDATES:
                     break;
                 case ABOUT_KEEPASS:
-                     menuItem.addActionListener((ActionEvent e) -> getController().showAboutDialog());
+                    menuItem.addActionListener((ActionEvent e) -> getController().showAboutDialog());
                     break;
                 default:
                     throw new AssertionError(menuItem.getType().name());
