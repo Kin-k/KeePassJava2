@@ -52,66 +52,66 @@ public class ActionTypeHelper {
     }
 
     public static ImageIcon getIcon(ActionType type) {
-        URL ressource = null;
+        URL resource = null;
         switch (type) {
             case OPEN:
-                ressource = ActionTypeHelper.class.getClassLoader().getResource("document-open.png");
-                if (null != ressource) {
-                    return new ImageIcon(ressource, "Open Database");
+                resource = ActionTypeHelper.class.getClassLoader().getResource("document-open.png");
+                if (null != resource) {
+                    return new ImageIcon(resource, "Open Database");
                 }
                 break;
             case SAVE:
-                ressource = ActionTypeHelper.class.getClassLoader().getResource("document-save.png");
-                if (null != ressource) {
-                    return new ImageIcon(ressource, "Save Database");
+                resource = ActionTypeHelper.class.getClassLoader().getResource("document-save.png");
+                if (null != resource) {
+                    return new ImageIcon(resource, "Save Database");
                 }
                 break;
             case ADD:
-                ressource = ActionTypeHelper.class.getClassLoader().getResource("entry-new.png");
-                if (null != ressource) {
-                    return new ImageIcon(ressource, "New Entry");
+                resource = ActionTypeHelper.class.getClassLoader().getResource("entry-new.png");
+                if (null != resource) {
+                    return new ImageIcon(resource, "New Entry");
                 }
                 break;
             case SHOW:
-                ressource = ActionTypeHelper.class.getClassLoader().getResource("entry-edit.png");
-                if (null != ressource) {
-                    return new ImageIcon(ressource, "Show/Edit Entry");
+                resource = ActionTypeHelper.class.getClassLoader().getResource("entry-edit.png");
+                if (null != resource) {
+                    return new ImageIcon(resource, "Show/Edit Entry");
                 }
                 break;
             case DELETE:
-                ressource = ActionTypeHelper.class.getClassLoader().getResource("entry-delete.png");
-                if (null != ressource) {
-                    return new ImageIcon(ressource, "Delete Entry");
+                resource = ActionTypeHelper.class.getClassLoader().getResource("entry-delete.png");
+                if (null != resource) {
+                    return new ImageIcon(resource, "Delete Entry");
                 }
                 break;
             case COPY_USER:
-                ressource = ActionTypeHelper.class.getClassLoader().getResource("username-copy.png");
-                if (null != ressource) {
-                    return new ImageIcon(ressource, "Copy Username");
+                resource = ActionTypeHelper.class.getClassLoader().getResource("username-copy.png");
+                if (null != resource) {
+                    return new ImageIcon(resource, "Copy Username");
                 }
                 break;
             case COPY_PW:
-                ressource = ActionTypeHelper.class.getClassLoader().getResource("password-copy.png");
-                if (null != ressource) {
-                    return new ImageIcon(ressource, "Copy Password");
+                resource = ActionTypeHelper.class.getClassLoader().getResource("password-copy.png");
+                if (null != resource) {
+                    return new ImageIcon(resource, "Copy Password");
                 }
                 break;
             case LOCK:
-                ressource = ActionTypeHelper.class.getClassLoader().getResource("document-encrypt.png");
-                if (null != ressource) {
-                    return new ImageIcon(ressource, "Lock Session");
+                resource = ActionTypeHelper.class.getClassLoader().getResource("document-encrypt.png");
+                if (null != resource) {
+                    return new ImageIcon(resource, "Lock Session");
                 }
                 break;
             case EXIT:
-                ressource = ActionTypeHelper.class.getClassLoader().getResource("dialog-error.png");
-                if (null != ressource) {
-                    return new ImageIcon(ressource, "Exit");
+                resource = ActionTypeHelper.class.getClassLoader().getResource("dialog-error.png");
+                if (null != resource) {
+                    return new ImageIcon(resource, "Exit");
                 }
                 break;
             case SEARCH:
-                ressource = ActionTypeHelper.class.getClassLoader().getResource("system-search.png");
-                if (null != ressource) {
-                    return new ImageIcon(ressource, "Exit");
+                resource = ActionTypeHelper.class.getClassLoader().getResource("system-search.png");
+                if (null != resource) {
+                    return new ImageIcon(resource, "Exit");
                 }
                 break;
             default:

@@ -45,9 +45,9 @@ public class IconHelper {
         ImageIcon imageIcon = getImageIconList()[index];
         if (null == imageIcon) {
             String imagePath = String.format("icons/database/%02d.png", index);
-            URL ressource = ActionTypeHelper.class.getClassLoader().getResource(imagePath);
-            if (null != ressource) {
-                imageIcon = new ImageIcon(ressource, imagePath);
+            URL resource = ActionTypeHelper.class.getClassLoader().getResource(imagePath);
+            if (null != resource) {
+                imageIcon = new ImageIcon(resource, imagePath);
                 imageIcon.setDescription(String.format("%02d", index));
                 getImageIconList()[index] = imageIcon;
                 setImagesLoaded(getImagesLoaded() + 1);
@@ -78,17 +78,17 @@ public class IconHelper {
         ImageIcon imageIcon = null;
         if (isVisible) {
             if (null == passwordHideIcon) {
-                URL ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/password-show-off.png");
-                if (null != ressource) {
-                    passwordHideIcon = new ImageIcon(ressource, "Hide Password");
+                URL resource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/password-show-off.png");
+                if (null != resource) {
+                    passwordHideIcon = new ImageIcon(resource, "Hide Password");
                 }
             }
             imageIcon = passwordHideIcon;
         } else {
             if (null == passwordShowIcon) {
-                URL ressource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/password-show-on.png");
-                if (null != ressource) {
-                    passwordShowIcon = new ImageIcon(ressource, "Show Password");
+                URL resource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/password-show-on.png");
+                if (null != resource) {
+                    passwordShowIcon = new ImageIcon(resource, "Show Password");
                 }
             }
             imageIcon = passwordShowIcon;

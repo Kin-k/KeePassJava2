@@ -53,8 +53,8 @@ public class IconHelperTest {
         icon = new IIcon(index);
         result = IconHelper.getImageIcon(icon);
         String imageName = String.format("icons/database/%02d.png", index);
-        URL ressource = ActionTypeHelper.class.getClassLoader().getResource(imageName);
-        expResult = new ImageIcon(ressource, imageName);
+        URL resource = ActionTypeHelper.class.getClassLoader().getResource(imageName);
+        expResult = new ImageIcon(resource, imageName);
         assertEquals(expResult.getImage(), result.getImage());
         // test caching
         expResult = IconHelper.getImageIcon(icon);
