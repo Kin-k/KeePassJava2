@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package view;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
@@ -24,6 +24,8 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import main.DatabaseObject;
+import main.IconHelper;
 import org.linguafranca.pwdb.Group;
 
 /**
@@ -128,7 +130,7 @@ public class KeePassShowGroupGUI extends KeePassShowObjectGUI {
     }
 
     @Override
-    protected void saveInputToObject(DatabaseObject object) {
+    public void saveInputToObject(DatabaseObject object) {
         if (null != object && object.isGroup()) {
             Group group = object.getGroup();
             // update if values change (avoid setDirty = true)

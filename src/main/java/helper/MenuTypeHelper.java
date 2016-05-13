@@ -13,27 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package helper;
 
+import enums.MenuItemType;
+import enums.MenuType;
 import java.net.URL;
 import javax.swing.ImageIcon;
-
-enum MenuType {
-
-    FILE, EDIT, VIEW, TOOLS, HELP
-}
-
-enum MenuItemType {
-
-    // File menu
-    NEW, OPEN, OPEN_RECENT, CLOSE, SAVE, SAVE_AS, DATABASE_SETTINGS, CHANGE_MASTER_KEY, PRINT, IMPORT, EXPORT, SYNCHRONIZE, LOCK_WORKSPACE, EXIT,
-    // Edit menu
-    ADD_GROUP, EDIT_GROUP, DELETE_GROUP, ADD_ENTRY, EDIT_ENTRY, DUPLICATE_ENTRY, DELETE_ENTRY, SELECT_ALL, SHOW_ALL_ENTRIES, SHOW_ALL_EXPIRED_ENTIRES, SHOW_ENTRIES_BY_TAG, FIND,
-    // View menu
-    // Tools menu
-    // Help Menu
-    HELP_CONTENTS, HELP_SOURCE, KEEPASS_WEBSITE, DONATE, CHECK_FOR_UPDATES, ABOUT_KEEPASS
-}
 
 /**
  *

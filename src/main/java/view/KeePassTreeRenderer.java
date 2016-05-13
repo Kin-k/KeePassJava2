@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package view;
 
 import java.awt.Component;
 import javax.swing.ImageIcon;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import main.DatabaseObject;
+import main.IconHelper;
 
 /**
  *
@@ -41,9 +43,9 @@ public class KeePassTreeRenderer extends DefaultTreeCellRenderer {
                     setIcon(icon);
                 } else {
                     if (expanded) {
-                        setIcon(openIcon);
+                        setIcon(getOpenIcon());
                     } else {
-                        setIcon(closedIcon);
+                        setIcon(getClosedIcon());
                     }
                 }
             } else if (databaseObject.isEntry()) {
@@ -51,7 +53,7 @@ public class KeePassTreeRenderer extends DefaultTreeCellRenderer {
                 if (null != icon) {
                     setIcon(icon);
                 } else {
-                    setIcon(leafIcon);
+                    setIcon(getLeafIcon());
                 }
             }
         }

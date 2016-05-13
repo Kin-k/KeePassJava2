@@ -15,6 +15,7 @@
  */
 package main;
 
+import helper.ActionTypeHelper;
 import java.net.URL;
 import javax.swing.ImageIcon;
 import org.linguafranca.pwdb.Icon;
@@ -74,9 +75,9 @@ public class IconHelper {
         return index;
     }
 
-    public static ImageIcon getPasswordIcon(boolean isVisible) {
+    public static ImageIcon getPasswordIcon(boolean isPasswordVisible) {
         ImageIcon imageIcon = null;
-        if (isVisible) {
+        if (isPasswordVisible) {
             if (null == passwordHideIcon) {
                 URL resource = ActionTypeHelper.class.getClassLoader().getResource("icons/actions/password-show-off.png");
                 if (null != resource) {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -31,7 +31,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import static main.KeePassShowObjectGUI.PADDING_LEFT;
+import main.DatabaseObject;
+import main.IconHelper;
+import static view.KeePassShowObjectGUI.PADDING_LEFT;
 import org.bouncycastle.util.Arrays;
 import org.linguafranca.pwdb.Entry;
 
@@ -427,7 +429,7 @@ public class KeePassShowEntryGUI extends KeePassShowObjectGUI {
     }
 
     @Override
-    protected void saveInputToObject(DatabaseObject object) {
+    public void saveInputToObject(DatabaseObject object) {
         // todo check for matching password!
         if (null != object && object.isEntry()) {
             Entry entry = object.getEntry();

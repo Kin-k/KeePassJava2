@@ -13,29 +13,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package view;
 
 import java.awt.Component;
-import java.awt.Frame;
-import javax.swing.JOptionPane;
+import javax.swing.DefaultListCellRenderer;
+import javax.swing.ImageIcon;
+import javax.swing.JList;
 
 /**
  *
  * @author SpecOp0
  */
-public class ChooseIconDialog extends JOptionPane {
+public class ImageIconCellRenderer extends DefaultListCellRenderer {
 
-    private static final long serialVersionUID = 1L;
-
-    public static int showChooseIconDialog(Component parentComponent, String title, int iconIndex) {
-        int selectedIndex = -1;
-        // let user select icon
-        IconDialog iconDialog = new IconDialog((Frame) parentComponent, title, iconIndex);
-        iconDialog.setVisible(true);
-        if (iconDialog.getClosingAction() == JOptionPane.OK_OPTION) {
-            selectedIndex = iconDialog.getSelectedButton();
+    @Override
+    public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+        super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        if (value instanceof ImageIcon) {
+            ImageIcon image = (ImageIcon) value;
+            setIcon(image);
+            setText(image.getDescription());
+        } else {
+            setIcon(null);
         }
-        return selectedIndex;
+        return this;
     }
-
+    
 }

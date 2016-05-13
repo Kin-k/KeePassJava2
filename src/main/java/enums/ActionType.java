@@ -13,27 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
-
-import javax.swing.JButton;
+package enums;
 
 /**
  *
  * @author SpecOp0
  */
-public class ActionButton extends JButton {
+public enum ActionType {
 
-    private static final long serialVersionUID = 1L;
-
-    protected final ActionType type;
-
-    public ActionButton(ActionType type) {
-        super();
-        this.type = type;
-    }
-
-    public ActionType getType() {
-        return type;
-    }
+    OPEN, SAVE, ADD, SHOW, DELETE, COPY_USER, COPY_PW, LOCK, EXIT, SEARCH
 
 }

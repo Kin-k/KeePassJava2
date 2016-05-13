@@ -13,8 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package view;
 
+import enums.ActionType;
+import enums.MenuItemType;
+import enums.MenuType;
+import helper.ActionTypeHelper;
+import helper.MenuTypeHelper;
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
@@ -42,6 +47,8 @@ import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.TableModel;
 import javax.swing.tree.DefaultTreeCellRenderer;
+import main.DatabaseObject;
+import model.KeePassTableModel;
 
 /**
  *
@@ -186,7 +193,7 @@ public class KeePassGUI extends JFrame implements TableModelListener {
         return null;
     }
 
-    static byte[] enterPassword(Component parentComponent) {
+    public static byte[] enterPassword(Component parentComponent) {
         JPasswordField passwordField = new JPasswordField();
         int returnValuePassword = JOptionPane.showConfirmDialog(parentComponent, passwordField, "Enter Password", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 

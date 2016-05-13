@@ -13,20 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package listener;
 
+import events.DatabaseChangedEvent;
 import java.util.EventListener;
-import java.util.List;
-import org.linguafranca.pwdb.Entry;
 
 /**
  *
  * @author SpecOp0
  */
-public interface SelectionChangedListener extends EventListener {
+public interface DatabaseChangedListener extends EventListener {
 
-    void showData(DatabaseObject object);
-    
-    void showData(List<Entry> entries);
+    void databaseChanged(DatabaseChangedEvent event);
 
 }

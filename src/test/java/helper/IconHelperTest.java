@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package helper;
 
+import helper.ActionTypeHelper;
 import java.net.URL;
 import javax.swing.ImageIcon;
+import main.IconHelper;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.linguafranca.pwdb.Icon;

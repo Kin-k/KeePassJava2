@@ -13,16 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package helper;
 
+import enums.ActionType;
 import java.net.URL;
 import javax.swing.ImageIcon;
-
-enum ActionType {
-
-    OPEN, SAVE, ADD, SHOW, DELETE, COPY_USER, COPY_PW, LOCK, EXIT, SEARCH
-
-}
+import view.ActionButton;
 
 /**
  *

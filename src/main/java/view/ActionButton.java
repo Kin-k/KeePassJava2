@@ -13,26 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package view;
 
-import javax.swing.JMenuItem;
+import enums.ActionType;
+import javax.swing.JButton;
 
 /**
  *
  * @author SpecOp0
  */
-public class JMenuItemType extends JMenuItem {
+public class ActionButton extends JButton {
 
     private static final long serialVersionUID = 1L;
 
-    private final MenuItemType type;
+    protected final ActionType type;
 
-    public JMenuItemType(MenuItemType type) {
-        super(type.toString());
+    public ActionButton(ActionType type) {
+        super();
         this.type = type;
     }
 
-    public MenuItemType getType() {
+    public ActionType getType() {
         return type;
     }
 

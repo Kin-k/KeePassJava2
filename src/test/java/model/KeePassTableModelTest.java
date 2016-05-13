@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package model;
 
+import model.KeePassTableModel;
 import java.io.IOException;
 import java.util.List;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import main.DatabaseObject;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.linguafranca.pwdb.Database;

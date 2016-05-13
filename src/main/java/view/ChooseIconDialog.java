@@ -13,27 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package view;
 
-import javax.swing.JMenu;
+import java.awt.Component;
+import java.awt.Frame;
+import javax.swing.JOptionPane;
 
 /**
  *
  * @author SpecOp0
  */
-public class JMenuType extends JMenu {
+public class ChooseIconDialog extends JOptionPane {
 
     private static final long serialVersionUID = 1L;
 
-    private final MenuType type;
-
-    public JMenuType(MenuType type) {
-        super(MenuTypeHelper.getName(type));
-        this.type = type;
-    }
-
-    public MenuType getType() {
-        return type;
+    public static int showChooseIconDialog(Component parentComponent, String title, int iconIndex) {
+        int selectedIndex = -1;
+        // let user select icon
+        IconDialog iconDialog = new IconDialog((Frame) parentComponent, title, iconIndex);
+        iconDialog.setVisible(true);
+        if (iconDialog.getClosingAction() == JOptionPane.OK_OPTION) {
+            selectedIndex = iconDialog.getSelectedButton();
+        }
+        return selectedIndex;
     }
 
 }

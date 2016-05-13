@@ -13,14 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package view;
 
+import view.ActionButton;
+import view.KeePassGUI;
+import helper.ActionTypeHelper;
 import helper.IRobot;
 import java.awt.AWTException;
 import java.awt.Point;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import main.DatabasePathTest;
+import model.KeePassTableModel;
+import model.KeePassTree;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
@@ -146,7 +152,7 @@ public class KeePassGUITest {
         int xOffset = (int) location.getX() + 142;
         int yOffset = (int) location.getY() + 67;
         // test.kdbx file
-        robot.mouseMove(xOffset + 40, yOffset + 160);
+        robot.mouseMove(xOffset + 40, yOffset + 230);
         robot.click();
         // ok button
         robot.mouseMove(xOffset + 350, yOffset + 330);

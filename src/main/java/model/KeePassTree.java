@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package model;
 
+import listener.DatabaseChangedListener;
+import events.DatabaseChangedEvent;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
+import main.DatabaseObject;
 import org.linguafranca.pwdb.Entry;
 import org.linguafranca.pwdb.Group;
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package view;
 
 import helper.IRobot;
 import java.awt.BorderLayout;
@@ -24,6 +24,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import main.DatabaseObject;
 
 /**
  *
@@ -81,7 +82,7 @@ public abstract class KeePassShowObjectGUI extends JFrame {
         dispose();
     }
 
-    protected abstract void saveInputToObject(DatabaseObject object);
+    public abstract void saveInputToObject(DatabaseObject object);
 
     protected void chooseIcon() {
         int selectedIndex = ChooseIconDialog.showChooseIconDialog(this, "Choose Icon", getIconIndex());
