@@ -36,6 +36,7 @@ public class IRobot extends Robot {
     public final static KeyStroke STROKE_ENTER = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
     public final static KeyStroke STROKE_ENTF = KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0);
     public final static KeyStroke STROKE_DELETE = KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0);
+    public final static KeyStroke STROKE_RIGHT_CLICK = KeyStroke.getKeyStroke(KeyEvent.BUTTON3_DOWN_MASK, 0);
 
     public IRobot() throws AWTException {
         super();

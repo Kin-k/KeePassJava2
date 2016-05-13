@@ -24,7 +24,7 @@ import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-import main.DatabaseObject;
+import model.DatabaseObject;
 
 /**
  *

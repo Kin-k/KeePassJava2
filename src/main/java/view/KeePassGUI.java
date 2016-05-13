@@ -24,11 +24,11 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.HeadlessException;
+import java.awt.Point;
 import java.awt.TextField;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JMenuBar;
@@ -47,7 +47,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.TableModel;
 import javax.swing.tree.DefaultTreeCellRenderer;
-import main.DatabaseObject;
+import model.DatabaseObject;
 import model.KeePassTableModel;
 
 /**
@@ -85,14 +85,9 @@ public class KeePassGUI extends JFrame implements TableModelListener {
             if (MenuTypeHelper.isImplemented(itemType)) {
                 for (JMenuType menu : menuIndex) {
                     if (menu.getType() == menuType) {
-                        JMenuItemType menuItem = new JMenuItemType(itemType);
+                        JMenuItemType menuItem = MenuTypeHelper.getMenuItem(itemType);
                         menu.add(menuItem);
                         menuItems.add(menuItem);
-                        ImageIcon icon = MenuTypeHelper.getIcon(itemType);
-                        if (null != icon) {
-                            menuItem.setIcon(icon);
-                            menuItem.setText(icon.getDescription());
-                        }
                         if (MenuTypeHelper.isSeperatorAfterward(itemType)) {
                             menu.addSeparator();
                         }
@@ -109,14 +104,7 @@ public class KeePassGUI extends JFrame implements TableModelListener {
         Dimension preferredDimension = new Dimension(32, 32);
         searchField = new TextField();
         for (ActionType type : ActionType.values()) {
-            ActionButton button = new ActionButton(type);
-            ImageIcon icon = ActionTypeHelper.getIcon(type);
-            if (null != icon) {
-                button.setIcon(icon);
-                button.setToolTipText(icon.getDescription());
-            } else {
-                button.setText(type.toString());
-            }
+            ActionButton button = ActionTypeHelper.getButton(type);
             button.setPreferredSize(preferredDimension);
             if (type == ActionType.SEARCH) {
                 toolbar.add(searchField);
@@ -232,6 +220,16 @@ public class KeePassGUI extends JFrame implements TableModelListener {
         KeePassTableModel model = (KeePassTableModel) getDataTable().getModel();
         DatabaseObject object = model.getDatabaseObject(getDataTable().getSelectedRow());
         return object;
+    }
+
+    public DatabaseObject getAndSelectObjectAt(Point point) {
+        // only use of KeePass model variants
+        int rowIndex = getDataTable().rowAtPoint(point);
+        SwingUtilities.invokeLater(() -> {
+            getDataTable().getSelectionModel().setSelectionInterval(rowIndex, rowIndex);
+        });
+        KeePassTableModel model = (KeePassTableModel) getDataTable().getModel();
+        return model.get(rowIndex);
     }
 
     public List<ActionButton> getTopPanelButtons() {

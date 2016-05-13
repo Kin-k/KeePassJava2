@@ -19,12 +19,23 @@ import enums.MenuItemType;
 import enums.MenuType;
 import java.net.URL;
 import javax.swing.ImageIcon;
+import view.JMenuItemType;
 
 /**
  *
  * @author SpecOp0
  */
 public class MenuTypeHelper {
+
+    public static JMenuItemType getMenuItem(MenuItemType type) {
+        JMenuItemType menuItem = new JMenuItemType(type);
+        ImageIcon icon = MenuTypeHelper.getIcon(type);
+        if (null != icon) {
+            menuItem.setIcon(icon);
+            menuItem.setText(icon.getDescription());
+        }
+        return menuItem;
+    }
 
     public static boolean isSeperatorAfterward(MenuItemType type) {
         switch (type) {

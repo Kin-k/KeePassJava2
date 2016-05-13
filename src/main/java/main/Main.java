@@ -24,11 +24,14 @@ import listener.SelectionChangedListener;
 import listener.DatabaseChangedListener;
 import helper.IRobot;
 import java.awt.event.ActionEvent;
+import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import javax.swing.JComponent;
+import javax.swing.JMenuItem;
+import javax.swing.JPopupMenu;
 
 /**
  *
@@ -131,7 +134,7 @@ public class Main {
                     button.addActionListener((ActionEvent e) -> getController().save());
                     break;
                 case ADD:
-                    button.addActionListener((ActionEvent e) -> getController().add());
+                    button.addActionListener((ActionEvent e) -> getController().addEntry());
                     break;
                 case SHOW:
                     button.addActionListener((ActionEvent e) -> getController().showTableSelect());
@@ -167,7 +170,11 @@ public class Main {
         });
         // add key actions for tree on the left and table on the right
         getGui().getTreePane().registerKeyboardAction((ActionEvent e) -> getController().showTreeSelect(e), IRobot.STROKE_ENTER, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
-        
+        getGui().getTreePane().registerKeyboardAction((ActionEvent e) -> getController().deleteGroupOrEntry(), IRobot.STROKE_ENTF, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        getGui().getTreePane().registerKeyboardAction((ActionEvent e) -> getController().deleteGroupOrEntry(), IRobot.STROKE_DELETE, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        getTree().addMouseListener(getController());
+        getGui().getDataTable().addMouseListener(getController());
+
         getGui().getDataTable().registerKeyboardAction((ActionEvent e) -> getController().copyPassword(), IRobot.STROKE_CTRL_AND_COPY, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         getGui().getDataTable().registerKeyboardAction((ActionEvent e) -> getController().showTableSelect(), IRobot.STROKE_ENTER, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         getGui().getDataTable().registerKeyboardAction((ActionEvent e) -> getController().deleteEntry(), IRobot.STROKE_ENTF, JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
@@ -211,14 +218,16 @@ public class Main {
                     menuItem.addActionListener((ActionEvent e) -> getController().exit());
                     break;
                 case ADD_GROUP:
+                    menuItem.addActionListener((ActionEvent e) -> getController().addGroup());
                     break;
                 case EDIT_GROUP:
                     menuItem.addActionListener((ActionEvent e) -> getController().showTreeSelect());
                     break;
                 case DELETE_GROUP:
+                    menuItem.addActionListener((ActionEvent e) -> getController().deleteGroup());
                     break;
                 case ADD_ENTRY:
-                    menuItem.addActionListener((ActionEvent e) -> getController().add());
+                    menuItem.addActionListener((ActionEvent e) -> getController().addEntry());
                     break;
                 case EDIT_ENTRY:
                     menuItem.addActionListener((ActionEvent e) -> getController().showTreeSelect());
@@ -226,6 +235,7 @@ public class Main {
                 case DUPLICATE_ENTRY:
                     break;
                 case DELETE_ENTRY:
+                    menuItem.addActionListener((ActionEvent e) -> getController().deleteEntry());
                     break;
                 case SELECT_ALL:
                     break;

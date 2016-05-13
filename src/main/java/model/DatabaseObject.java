@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package main;
+package model;
 
 import org.linguafranca.pwdb.Entry;
 import org.linguafranca.pwdb.Group;
@@ -62,6 +62,18 @@ public class DatabaseObject {
 
     public boolean isEntry() {
         return null != getEntry();
+    }
+
+    public boolean equals(Entry entry) {
+        return entry != null && entry == getEntry();
+    }
+
+    public boolean equals(Group group) {
+        return group != null && group == getGroup();
+    }
+
+    public boolean equals(DatabaseObject object) {
+        return object != null && object.getGroup() == getGroup() && object.getEntry() == getEntry();
     }
 
     public Object getObject() {

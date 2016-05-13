@@ -17,7 +17,7 @@ package listener;
 
 import java.util.EventListener;
 import java.util.List;
-import main.DatabaseObject;
+import model.DatabaseObject;
 import org.linguafranca.pwdb.Entry;
 
 /**

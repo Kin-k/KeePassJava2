@@ -24,7 +24,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import main.DatabaseObject;
+import model.DatabaseObject;
 import main.IconHelper;
 import org.linguafranca.pwdb.Group;
 

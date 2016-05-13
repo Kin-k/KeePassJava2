@@ -26,6 +26,18 @@ import view.ActionButton;
  */
 public class ActionTypeHelper {
 
+    public static ActionButton getButton(ActionType type) {
+        ActionButton button = new ActionButton(type);
+        ImageIcon icon = ActionTypeHelper.getIcon(type);
+        if (null != icon) {
+            button.setIcon(icon);
+            button.setToolTipText(icon.getDescription());
+        } else {
+            button.setText(type.toString());
+        }
+        return button;
+    }
+
     public static boolean isSeperatorAfterwards(ActionType type) {
         switch (type) {
             case SAVE:

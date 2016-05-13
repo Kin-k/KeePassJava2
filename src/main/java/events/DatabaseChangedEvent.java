@@ -16,6 +16,7 @@
 package events;
 
 import java.util.EventObject;
+import model.DatabaseObject;
 import org.linguafranca.pwdb.Database;
 
 /**
@@ -28,16 +29,26 @@ public class DatabaseChangedEvent extends EventObject {
 
     private final Database database;
     private final boolean newDatabase;
+    private final DatabaseObject displayedObject;
 
     public DatabaseChangedEvent(Object source, Database database) {
         super(source);
         this.database = database;
         this.newDatabase = false;
+        this.displayedObject = null;
     }
 
-    public DatabaseChangedEvent(Database database, boolean newDatabase, Object source) {
+    public DatabaseChangedEvent(Object source, Database database, DatabaseObject displayedObject) {
         super(source);
         this.database = database;
+        this.displayedObject = displayedObject;
+        this.newDatabase = false;
+    }
+
+    public DatabaseChangedEvent(Object source, Database database, DatabaseObject displayedObject, boolean newDatabase) {
+        super(source);
+        this.database = database;
+        this.displayedObject = displayedObject;
         this.newDatabase = newDatabase;
     }
 
@@ -47,6 +58,10 @@ public class DatabaseChangedEvent extends EventObject {
 
     public boolean isNewDatabase() {
         return newDatabase;
+    }
+
+    public DatabaseObject getDisplayedObject() {
+        return displayedObject;
     }
 
 }

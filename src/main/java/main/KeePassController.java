@@ -15,6 +15,7 @@
  */
 package main;
 
+import model.DatabaseObject;
 import model.KeePassTree;
 import view.KeePassShowEntryGUI;
 import view.KeePassShowObjectGUI;
@@ -30,6 +31,7 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
@@ -49,30 +51,35 @@ import java.util.logging.Logger;
 import javax.swing.JEditorPane;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
 import javax.swing.JTree;
 import javax.swing.SwingUtilities;
 import javax.swing.event.EventListenerList;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.TreePath;
 import org.linguafranca.pwdb.Entry;
 import org.linguafranca.pwdb.Group;
 import org.linguafranca.pwdb.Visitor;
 import org.linguafranca.pwdb.kdbx.KdbxCredentials;
 import org.linguafranca.pwdb.kdbx.dom.DomDatabaseWrapper;
 import org.linguafranca.security.Credentials;
+import view.JMenuItemType;
+import view.KeePassPopupMenu;
 
 /**
  *
  * @author SpecOp0
  */
-public class KeePassController implements TreeSelectionListener {
+public class KeePassController implements TreeSelectionListener, MouseListener {
 
     private final EventListenerList listeners = new EventListenerList();
     private final KeePassGUI gui;
     private final KeePassTree tree;
     private static Thread passwordReset = null;
     private KeePassShowObjectGUI showObjectGui = null;
+    private KeePassPopupMenu popupMenu = null;
     // current database
     private DomDatabaseWrapper database = null;
     private File databaseFile = null;
@@ -97,7 +104,7 @@ public class KeePassController implements TreeSelectionListener {
 
                     notifyDatabaseChanged();
                     // clear shown entries (data model)
-                    updateTreeData(new ArrayList<>());
+                    updateTableData(new ArrayList<>());
                 } catch (IOException ex) {
                     Logger.getLogger(KeePassController.class.getName()).log(Level.SEVERE, null, ex);
                     KeePassGUI.showWarning("Error creating Database", "An error occured while creating a new Database.", getGui());
@@ -112,7 +119,7 @@ public class KeePassController implements TreeSelectionListener {
         setPassword(null);
         notifyDatabaseChanged();
         // clear shown entries (data model)
-        updateTreeData(new ArrayList<>());
+        updateTableData(new ArrayList<>());
     }
 
     public void open() {
@@ -199,10 +206,10 @@ public class KeePassController implements TreeSelectionListener {
         return path;
     }
 
-    public void add() {
+    private Group getGroupOfSelectedObject() {
+        Group group = null;
         if (null != getDatabase()) {
-            Group group = null;
-            DatabaseObject object = KeePassTree.getSelectedObject(getTree());
+            DatabaseObject object = getTree().getSelectedObject();
             if (null != object) {
                 if (object.isEntry()) {
                     group = object.getEntry().getParent();
@@ -214,13 +221,18 @@ public class KeePassController implements TreeSelectionListener {
             } else {
                 group = getDatabase().getRootGroup();
             }
-            if (null != group) {
-                add(group);
-            }
+        }
+        return group;
+    }
+
+    public void addEntry() {
+        Group group = getGroupOfSelectedObject();
+        if (null != group) {
+            addEntryToGroup(group);
         }
     }
 
-    public void add(Group group) {
+    public void addEntryToGroup(Group group) {
         if (null != getDatabase() && null == getShowObjectGui() && null != group) {
             setShowObjectGui(new KeePassShowEntryGUI(getGui()));
             getShowObjectGui().addWindowListener(new WindowAdapter() {
@@ -229,14 +241,41 @@ public class KeePassController implements TreeSelectionListener {
                     if (getShowObjectGui().isSaveObject()) {
                         DatabaseObject newEntry = new DatabaseObject(group.addEntry(getDatabase().newEntry()));
                         getShowObjectGui().saveInputToObject(newEntry);
-                        notifyDatabaseChanged();
-                        updateTreeData(new DatabaseObject(group));
+                        notifyDatabaseChanged(newEntry);
+                        updateTableData(new DatabaseObject(group));
                     }
                     setShowObjectGui(null);
                 }
             });
         } else {
-            getGui().showWarning("Entry already shown", "Another Entry window is open. You need to close that window before showing or editing another entry.");
+            getGui().showWarning("Entry/Group already shown", "Another Entry or Group window is open. You need to close that window before showing or editing another entry.");
+        }
+    }
+
+    public void addGroup() {
+        Group group = getGroupOfSelectedObject();
+        if (null != group) {
+            addGroupToGroup(group);
+        }
+    }
+
+    public void addGroupToGroup(Group group) {
+        if (null != getDatabase() && null == getShowObjectGui()) {
+            setShowObjectGui(new KeePassShowGroupGUI(getGui()));
+            getShowObjectGui().addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent event) {
+                    if (getShowObjectGui().isSaveObject()) {
+                        DatabaseObject newEntry = new DatabaseObject(group.addGroup(getDatabase().newGroup()));
+                        getShowObjectGui().saveInputToObject(newEntry);
+                        notifyDatabaseChanged(newEntry);
+                        updateTableData(newEntry);
+                    }
+                    setShowObjectGui(null);
+                }
+            });
+        } else {
+            getGui().showWarning("Entry/Group already shown", "Another Entry or Group window is open. You need to close that window before showing or editing another group.");
         }
     }
 
@@ -414,10 +453,32 @@ public class KeePassController implements TreeSelectionListener {
     public void deleteEntry() {
         if (null != getDatabase()) {
             DatabaseObject object = getGui().getSelectedObject();
-            if (null != object) {
+            if (null != object && object.isEntry()) {
                 delete(object);
             } else {
                 getGui().showWarning("Delete Failed", "No Entry in table selected (right-hand side).");
+            }
+        }
+    }
+
+    public void deleteGroup() {
+        if (null != getDatabase()) {
+            DatabaseObject object = getTree().getSelectedObject();
+            if (null != object && object.isGroup()) {
+                delete(object);
+            } else {
+                getGui().showWarning("Delete Failed", "No Group in tree selected (left-hand side).");
+            }
+        }
+    }
+
+    public void deleteGroupOrEntry() {
+        if (null != getDatabase()) {
+            DatabaseObject object = getTree().getSelectedObject();
+            if (null != object) {
+                delete(object);
+            } else {
+                getGui().showWarning("Delete Failed", "No Entry/Group in tree selected (left-hand side).");
             }
         }
     }
@@ -433,17 +494,23 @@ public class KeePassController implements TreeSelectionListener {
                     parent.removeEntry(object.getEntry());
                 }
             } else if (object.isGroup()) {
-                cancelDelete = KeePassGUI.showCancelDialog("Delete Group " + object.getGroup().getName() + "?", "Do you really want to delete the Group '" + object.getEntry().getTitle() + "' and all its Entries?", getGui());
-                if (!cancelDelete) {
-                    parent = object.getGroup().getParent();
-                    parent.removeGroup(object.getGroup());
+                if (!object.getGroup().isRootGroup()) {
+                    cancelDelete = KeePassGUI.showCancelDialog("Delete Group " + object.getGroup().getName() + "?", "Do you really want to delete the Group '" + object.getGroup().getName() + "' and all its Entries?", getGui());
+                    if (!cancelDelete) {
+                        parent = object.getGroup().getParent();
+                        parent.removeGroup(object.getGroup());
+                    }
+                } else {
+                    cancelDelete = true;
+                    KeePassGUI.showWarning("Cannot delete Root", "The Root group cannot be deleted. You can create a new Database or have to delete the Database file manually.", getGui());
                 }
             }
             if (!cancelDelete) {
                 if (null != parent) {
                     // no group, because only tree model (right-hand side) is used
-                    notifyDatabaseChanged();
-                    updateTreeData(new DatabaseObject(parent));
+                    DatabaseObject parentObject = new DatabaseObject(parent);
+                    notifyDatabaseChanged(parentObject);
+                    updateTableData(parentObject);
                 } else {
                     getGui().showWarning("Error while deleting", "Try to show delete Entry or Group, but could not find either.");
                     throw new IllegalArgumentException("Error while deleting: Given Object is neither Entry or Group");
@@ -484,57 +551,9 @@ public class KeePassController implements TreeSelectionListener {
                     }
                 });
                 Collections.sort(matchingEntries, (Entry entry1, Entry entry2) -> entry1.getTitle().toLowerCase().compareTo(entry2.getTitle().toLowerCase()));
-                updateTreeData(matchingEntries);
+                updateTableData(matchingEntries);
             });
         }
-    }
-
-    // ===========================
-    // initiate or listen to events
-    @Override
-    public void valueChanged(TreeSelectionEvent e) {
-        JTree tree = (JTree) e.getSource();
-        DatabaseObject object = KeePassTree.getSelectedObject(tree);
-        if (null != getDatabase() && null != object && object.isGroup()) {
-            updateTreeData(object);
-
-        }
-    }
-
-    private void updateTreeData(DatabaseObject object) {
-        for (SelectionChangedListener listener : getListeners().getListeners(SelectionChangedListener.class
-        )) {
-            listener.showData(object);
-        }
-
-    }
-
-    private void updateTreeData(List<Entry> entries) {
-        for (SelectionChangedListener listener : getListeners().getListeners(SelectionChangedListener.class
-        )) {
-            listener.showData(entries);
-        }
-    }
-
-    private void setEnabled(boolean enabled) {
-        getGui().setEnabledAllButtons(enabled);
-    }
-
-    public void notifyDatabaseChanged() {
-        DatabaseChangedEvent event = new DatabaseChangedEvent(this, getDatabase());
-
-        for (DatabaseChangedListener listener : getListeners().getListeners(DatabaseChangedListener.class
-        )) {
-            listener.databaseChanged(event);
-        }
-    }
-
-    public <T extends EventListener> void addListener(Class<T> className, T listener) {
-        getListeners().add(className, listener);
-    }
-
-    public <T extends EventListener> void removeListener(Class<T> className, T listener) {
-        getListeners().remove(className, listener);
     }
 
     public void exit() {
@@ -611,6 +630,159 @@ public class KeePassController implements TreeSelectionListener {
         }
     }
 
+    // ===========================
+    // initiate or listen to events
+    @Override
+    public void valueChanged(TreeSelectionEvent e) {
+        JTree tree = (JTree) e.getSource();
+        DatabaseObject object = KeePassTree.getSelectedObject(tree);
+        if (null != getDatabase() && null != object) {
+            if (object.isGroup()) {
+                updateTableData(object);
+            } else {
+                updateTableData(new DatabaseObject(object.getEntry().getParent()));
+            }
+        }
+    }
+
+    private void updateTableData(DatabaseObject object) {
+        for (SelectionChangedListener listener : getListeners().getListeners(SelectionChangedListener.class)) {
+            listener.showData(object);
+        }
+
+    }
+
+    private void updateTableData(List<Entry> entries) {
+        for (SelectionChangedListener listener : getListeners().getListeners(SelectionChangedListener.class)) {
+            listener.showData(entries);
+        }
+    }
+
+    private void setEnabled(boolean enabled) {
+        getGui().setEnabledAllButtons(enabled);
+    }
+
+    public void notifyDatabaseChanged() {
+        notifyDatabaseChanged(getTree().getSelectedObject());
+    }
+
+    public void notifyDatabaseChanged(DatabaseObject objectToShow) {
+        DatabaseChangedEvent event = new DatabaseChangedEvent(this, getDatabase(), objectToShow);
+        for (DatabaseChangedListener listener : getListeners().getListeners(DatabaseChangedListener.class)) {
+            listener.databaseChanged(event);
+        }
+    }
+
+    public <T extends EventListener> void addListener(Class<T> className, T listener) {
+        getListeners().add(className, listener);
+    }
+
+    public <T extends EventListener> void removeListener(Class<T> className, T listener) {
+        getListeners().remove(className, listener);
+    }
+
+    // PopupMenu for Tree and Table
+    @Override
+    public void mouseClicked(MouseEvent e) {
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent mouseEvent) {
+        disposePopupMenu();
+        if (mouseEvent.getButton() == MouseEvent.BUTTON3) {
+            if (null != getDatabase() && null != mouseEvent.getComponent()) {
+                // check wether tree or table is selected
+                DatabaseObject object;
+                if (mouseEvent.getComponent() instanceof JTable) {
+                    object = getGui().getAndSelectObjectAt(mouseEvent.getPoint());
+                } else {
+                    object = getTree().getAndSelectObjectAt(mouseEvent.getX(), mouseEvent.getY());
+                    // if nothing in tree selected use root group
+                    if (null == object) {
+                        object = new DatabaseObject(getDatabase().getRootGroup());
+                    }
+                }
+                if (null != object) {
+                    setPopupMenu(new KeePassPopupMenu(object, mouseEvent.getLocationOnScreen()));
+                    addPopupMenuActionListener(object);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+    }
+
+    private void addPopupMenuActionListener(DatabaseObject object) {
+        for (JMenuItemType menuItem : getPopupMenu().getMenuItems()) {
+            switch (menuItem.getType()) {
+                case ADD_GROUP:
+                    menuItem.addActionListener((ActionEvent e) -> {
+                        disposePopupMenu();
+                        addGroupToGroup(object.getGroup());
+                    });
+                    break;
+                case EDIT_GROUP:
+                    menuItem.addActionListener((ActionEvent e) -> {
+                        disposePopupMenu();
+                        show(object);
+                    });
+                    break;
+                case DELETE_GROUP:
+                    menuItem.addActionListener((ActionEvent e) -> {
+                        disposePopupMenu();
+                        delete(object);
+                    });
+                    break;
+                case ADD_ENTRY:
+                    if (object.isGroup()) {
+                        menuItem.addActionListener((ActionEvent e) -> {
+                            disposePopupMenu();
+                            addEntryToGroup(object.getGroup());
+                        });
+                    } else {
+                        menuItem.addActionListener((ActionEvent e) -> {
+                            disposePopupMenu();
+                            addEntryToGroup(object.getEntry().getParent());
+                        });
+                    }
+                    break;
+                case EDIT_ENTRY:
+                    menuItem.addActionListener((ActionEvent e) -> {
+                        disposePopupMenu();
+                        show(object);
+                    });
+                    break;
+                case DUPLICATE_ENTRY:
+                    menuItem.addActionListener((ActionEvent e) -> {
+                        disposePopupMenu();
+                    });
+                    break;
+                case DELETE_ENTRY:
+                    menuItem.addActionListener((ActionEvent e) -> {
+                        disposePopupMenu();
+                        delete(object);
+                    });
+                    break;
+            }
+        }
+    }
+
+    private void disposePopupMenu() {
+        if (null != getPopupMenu()) {
+            setPopupMenu(getPopupMenu().dispose());
+        }
+    }
+
     // getter and setter
     public void setDatabaseFile(File databaseFile) {
         // save new database file to ini file
@@ -668,6 +840,14 @@ public class KeePassController implements TreeSelectionListener {
 
     public KeePassTree getTree() {
         return tree;
+    }
+
+    public KeePassPopupMenu getPopupMenu() {
+        return popupMenu;
+    }
+
+    public void setPopupMenu(KeePassPopupMenu popupMenu) {
+        this.popupMenu = popupMenu;
     }
 
 }

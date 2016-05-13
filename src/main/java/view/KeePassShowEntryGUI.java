@@ -31,7 +31,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
-import main.DatabaseObject;
+import model.DatabaseObject;
 import main.IconHelper;
 import static view.KeePassShowObjectGUI.PADDING_LEFT;
 import org.bouncycastle.util.Arrays;

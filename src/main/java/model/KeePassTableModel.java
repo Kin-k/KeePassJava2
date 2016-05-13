@@ -19,11 +19,11 @@ import listener.SelectionChangedListener;
 import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.List;
+import javax.swing.JTable;
 import javax.swing.event.EventListenerList;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
-import main.DatabaseObject;
 import org.linguafranca.pwdb.Entry;
 
 /**
@@ -153,7 +153,12 @@ public class KeePassTableModel implements TableModel, SelectionChangedListener {
     @Override
     public void setValueAt(Object aValue, int rowIndex, int columnIndex) {
     }
+    
+    public int indexOf(DatabaseObject object){
+        return data.indexOf(object);
+    }
 
+    // listener and events
     @Override
     public void addTableModelListener(TableModelListener l) {
         getListeners().add(TableModelListener.class, l);
@@ -171,6 +176,15 @@ public class KeePassTableModel implements TableModel, SelectionChangedListener {
         }
     }
 
+    public <T extends EventListener> void addListener(Class<T> className, T listener) {
+        getListeners().add(className, listener);
+    }
+
+    public <T extends EventListener> void removeListener(Class<T> className, T listener) {
+        getListeners().remove(className, listener);
+    }
+
+    // getter and setter 
     public boolean isEmpty() {
         return data.isEmpty();
     }
@@ -189,14 +203,6 @@ public class KeePassTableModel implements TableModel, SelectionChangedListener {
 
     public int size() {
         return data.size();
-    }
-
-    public <T extends EventListener> void addListener(Class<T> className, T listener) {
-        getListeners().add(className, listener);
-    }
-
-    public <T extends EventListener> void removeListener(Class<T> className, T listener) {
-        getListeners().remove(className, listener);
     }
 
     public EventListenerList getListeners() {

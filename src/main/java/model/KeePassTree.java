@@ -17,11 +17,12 @@ package model;
 
 import listener.DatabaseChangedListener;
 import events.DatabaseChangedEvent;
+import java.util.Enumeration;
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
-import main.DatabaseObject;
+import javax.swing.tree.TreePath;
 import org.linguafranca.pwdb.Entry;
 import org.linguafranca.pwdb.Group;
 
@@ -51,12 +52,7 @@ public class KeePassTree extends JTree implements DatabaseChangedListener {
             root.setUserObject(new DatabaseObject(event.getDatabase().getRootGroup()));
             // search groups
             for (Group group : event.getDatabase().getRootGroup().getGroups()) {
-                DefaultMutableTreeNode branch = new DefaultMutableTreeNode(new DatabaseObject(group));
-                // and add entries
-                for (Entry entry : group.getEntries()) {
-                    DefaultMutableTreeNode leaf = new DefaultMutableTreeNode(new DatabaseObject(entry));
-                    branch.insert(leaf, branch.getChildCount());
-                }
+                DefaultMutableTreeNode branch = transformToNode(group);
                 root.add(branch);
             }
             // add direct entries for root
@@ -69,6 +65,65 @@ public class KeePassTree extends JTree implements DatabaseChangedListener {
         }
         // reload (closes tree if update only)
         model.reload(root);
+        if (null != event.getDisplayedObject()) {
+            displayObject(event.getDisplayedObject());
+        }
+    }
+
+    private DefaultMutableTreeNode transformToNode(DatabaseObject object) {
+        DefaultMutableTreeNode branch;
+        if (object.isGroup()) {
+            branch = new DefaultMutableTreeNode(object);
+            for (Group group : object.getGroup().getGroups()) {
+                branch.insert(transformToNode(group), branch.getChildCount());
+            }
+            for (Entry entry : object.getGroup().getEntries()) {
+                branch.insert(transformToNode(entry), branch.getChildCount());
+            }
+        } else {
+            branch = new DefaultMutableTreeNode(object);
+        }
+        return branch;
+    }
+
+    public void displayObject(DatabaseObject object) {
+        if (null != object) {
+            // search for expanded object
+            DefaultTreeModel model = (DefaultTreeModel) getModel();
+            DefaultMutableTreeNode root = (DefaultMutableTreeNode) model.getRoot();
+            TreePath pathToDisplay = find(root, object);
+            // display node
+            if (null != pathToDisplay) {
+                expandPath(pathToDisplay);
+                getSelectionModel().setSelectionPath(pathToDisplay);
+                if (object.isEntry()) {
+                    setExpandedState(pathToDisplay.getParentPath(), true);
+                } else {
+                    setExpandedState(pathToDisplay, true);
+                }
+            }
+        }
+    }
+
+    private TreePath find(DefaultMutableTreeNode root, DatabaseObject object) {
+        @SuppressWarnings("unchecked")
+        Enumeration<DefaultMutableTreeNode> e = root.depthFirstEnumeration();
+        while (e.hasMoreElements()) {
+            DefaultMutableTreeNode node = e.nextElement();
+            DatabaseObject nodeObject = (DatabaseObject) node.getUserObject();
+            if (nodeObject.getObject().equals(object.getObject())) {
+                return new TreePath(node.getPath());
+            }
+        }
+        return null;
+    }
+
+    private DefaultMutableTreeNode transformToNode(Group group) {
+        return transformToNode(new DatabaseObject(group));
+    }
+
+    private DefaultMutableTreeNode transformToNode(Entry entry) {
+        return transformToNode(new DatabaseObject(entry));
     }
 
     public static DatabaseObject getSelectedObject(JTree tree) {
@@ -78,6 +133,16 @@ public class KeePassTree extends JTree implements DatabaseChangedListener {
             object = (DatabaseObject) node.getUserObject();
         }
         return object;
+    }
+
+    public DatabaseObject getSelectedObject() {
+        return KeePassTree.getSelectedObject(this);
+    }
+
+    public DatabaseObject getAndSelectObjectAt(int Xlocation, int Ylocation) {
+        TreePath selPath = getPathForLocation(Xlocation, Ylocation);
+        getSelectionModel().setSelectionPath(selPath);
+        return getSelectedObject();
     }
 
 }
