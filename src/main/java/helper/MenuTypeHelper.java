@@ -22,11 +22,19 @@ import javax.swing.ImageIcon;
 import view.JMenuItemType;
 
 /**
+ * Useful functions for enums MenuType and MenuItemType.
  *
  * @author SpecOp0
  */
 public class MenuTypeHelper {
 
+    /**
+     * Creates JMenuItem(Type) for given MenuItemType. Mainly a Text and Icon
+     * (if exists) will be added.
+     *
+     * @param type type of JMenuItem(Type)
+     * @return new JMenuItemType
+     */
     public static JMenuItemType getMenuItem(MenuItemType type) {
         JMenuItemType menuItem = new JMenuItemType(type);
         ImageIcon icon = MenuTypeHelper.getIcon(type);
@@ -37,6 +45,12 @@ public class MenuTypeHelper {
         return menuItem;
     }
 
+    /**
+     * Tests if after given MenuItemType a seperator should be used.
+     *
+     * @param type MenuItemType to test
+     * @return true if a seperator should be placed after given type
+     */
     public static boolean isSeperatorAfterward(MenuItemType type) {
         switch (type) {
             case CLOSE:
@@ -56,6 +70,12 @@ public class MenuTypeHelper {
         return false;
     }
 
+    /**
+     * Tests if give MenuItemType is implemented.
+     *
+     * @param type MenuItemType to test
+     * @return true if given MenuItemType is implemente
+     */
     public static boolean isImplemented(MenuItemType type) {
         switch (type) {
             case NEW:
@@ -80,6 +100,12 @@ public class MenuTypeHelper {
         return false;
     }
 
+    /**
+     * Returns parent MenuType of given MenuItemType.
+     *
+     * @param type MenuItemType to test
+     * @return MenuType of parent Menu
+     */
     public static MenuType getMenu(MenuItemType type) {
         switch (type) {
             case NEW:
@@ -122,10 +148,24 @@ public class MenuTypeHelper {
         }
     }
 
+    /**
+     * Tests if given MenuItemType should always be usable (be active). Most of
+     * the functions can only be used if a Database is loaded and might want to
+     * be not active / clickable if no Database is present.
+     *
+     * @param type MenuItemType to test
+     * @return true if MenuItemType should always be usable
+     */
     public static boolean isAlwaysActive(MenuItemType type) {
         return false;
     }
 
+    /**
+     * Returns the Name (String) of given MenuType.
+     *
+     * @param type MenuType to get Name for
+     * @return Name of MenuType to display / use as text
+     */
     public static String getName(MenuType type) {
         String name = type.toString();
         switch (type) {
@@ -150,6 +190,13 @@ public class MenuTypeHelper {
         return name;
     }
 
+    /**
+     * Loads ImageIcon for given MenuItemType from resources folder. Returns
+     * null if not found.
+     *
+     * @param type MenuItemType to get Icon for
+     * @return ImageIcon of given MenuItemType or null if Icon not found
+     */
     public static ImageIcon getIcon(MenuItemType type) {
         URL resource;
         switch (type) {

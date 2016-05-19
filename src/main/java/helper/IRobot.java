@@ -24,24 +24,52 @@ import static java.awt.event.KeyEvent.*;
 import javax.swing.KeyStroke;
 
 /**
+ * Extension of Robot Class to improve usablity with Testing (e.g. double
+ * click). In Addition KeyStrokes are defined.
  *
  * @author SpecOp0
  */
 public class IRobot extends Robot {
 
     private final long sleepAfterClick = 200;
-
+    /**
+     * Hotkey for Copy (Ctrl + C)
+     */
     public final static KeyStroke STROKE_CTRL_AND_COPY = KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK, false);
+    /**
+     * Escape Key (ESC)
+     */
     public final static KeyStroke STROKE_ESCAPE = KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0);
+    /**
+     * Enter Key (Enter)
+     */
     public final static KeyStroke STROKE_ENTER = KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0);
+    /**
+     * Remove Key on Numpad (Entf)
+     */
     public final static KeyStroke STROKE_ENTF = KeyStroke.getKeyStroke(KeyEvent.VK_DELETE, 0);
+    /**
+     * Remove Key on QWER? Layout (Delete)
+     */
     public final static KeyStroke STROKE_DELETE = KeyStroke.getKeyStroke(KeyEvent.VK_BACK_SPACE, 0);
+    /**
+     * Right Click with the Mouse
+     */
     public final static KeyStroke STROKE_RIGHT_CLICK = KeyStroke.getKeyStroke(KeyEvent.BUTTON3_DOWN_MASK, 0);
 
+    /**
+     * Extension of Robot Class to improve usablity with Testing (e.g. double
+     * click). In Addition KeyStrokes are defined.
+     *
+     * @throws AWTException
+     */
     public IRobot() throws AWTException {
         super();
     }
 
+    /**
+     * Initiates single left click with the mouse on current position
+     */
     public void click() {
         mousePress(InputEvent.BUTTON1_DOWN_MASK);
         try {
@@ -51,6 +79,9 @@ public class IRobot extends Robot {
         mouseRelease(InputEvent.BUTTON1_DOWN_MASK);
     }
 
+    /**
+     * Initiates double left click with the mouse on current position
+     */
     public void doubleClick() {
         click();
         click();
@@ -60,6 +91,11 @@ public class IRobot extends Robot {
         }
     }
 
+    /**
+     * Types the given String on the KeyBoard
+     *
+     * @param string String to type
+     */
     public void type(String string) {
         for (char character : string.toCharArray()) {
             type(character);
