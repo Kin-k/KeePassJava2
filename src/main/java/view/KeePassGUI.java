@@ -147,16 +147,8 @@ public class KeePassGUI extends JFrame implements TableModelListener {
         this.setVisible(true);
     }
 
-    public List<JMenuType> getMenuIndex() {
-        return menuIndex;
-    }
-
-    public List<JMenuItemType> getMenuItems() {
-        return menuItems;
-    }
-
     public void setEnabledAllButtons(boolean enabled) {
-        getTopPanelButtons().stream().filter((ActionButton button) -> !ActionTypeHelper.isAlwaysActive(button)).forEach((ActionButton button) -> {
+        getTopPanelButtons().stream().filter((ActionButton button) -> !ActionTypeHelper.isAlwaysActive(button.getType())).forEach((ActionButton button) -> {
             button.setEnabled(enabled);
         });
     }
@@ -232,6 +224,7 @@ public class KeePassGUI extends JFrame implements TableModelListener {
         return model.get(rowIndex);
     }
 
+    // getter and setter
     public List<ActionButton> getTopPanelButtons() {
         return topPanelButtons;
     }
@@ -250,6 +243,14 @@ public class KeePassGUI extends JFrame implements TableModelListener {
 
     public JScrollPane getDataPane() {
         return dataPane;
+    }
+
+    public List<JMenuType> getMenuIndex() {
+        return menuIndex;
+    }
+
+    public List<JMenuItemType> getMenuItems() {
+        return menuItems;
     }
 
 }

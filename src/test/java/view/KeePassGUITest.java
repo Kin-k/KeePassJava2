@@ -59,7 +59,7 @@ public class KeePassGUITest {
         KeePassGUI instance = createKeePassGUI();
         instance.setEnabledAllButtons(enabled);
         for (ActionButton button : instance.getTopPanelButtons()) {
-            if (ActionTypeHelper.isAlwaysActive(button)) {
+            if (ActionTypeHelper.isAlwaysActive(button.getType())) {
                 assertEquals(true, button.isEnabled());
             } else {
                 assertEquals(enabled, button.isEnabled());

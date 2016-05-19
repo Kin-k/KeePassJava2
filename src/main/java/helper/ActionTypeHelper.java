@@ -66,14 +66,13 @@ public class ActionTypeHelper {
     /**
      * Tests if given ActionType should always be usable (be active). Most of
      * the functions can only be used if a Database is loaded and might want to
-     * be not active / clickable if no Database is present. TODO replaced param
-     * ActionButton withActionType
+     * be not active / clickable if no Database is present.
      *
      * @param type ActionType to test
      * @return true if ActionType should always be usable
      */
-    public static boolean isAlwaysActive(ActionButton button) {
-        switch (button.getType()) {
+    public static boolean isAlwaysActive(ActionType type) {
+        switch (type) {
             case COPY_USER:
             case COPY_PW:
             case EXIT:
