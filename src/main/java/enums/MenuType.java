@@ -16,6 +16,8 @@
 package enums;
 
 /**
+ * Types for JMenuType whose submenu (e.g. file menu) should be implemented. See
+ * #helper.MenuTypeHelper for useful functions.
  *
  * @author SpecOp0
  */
@@ -23,4 +25,3 @@ public enum MenuType {
 
     FILE, EDIT, VIEW, TOOLS, HELP
 }
-

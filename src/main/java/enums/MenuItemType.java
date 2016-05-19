@@ -16,10 +16,12 @@
 package enums;
 
 /**
+ * Types for JMenuItemType whose action (e.g. load and save action) which should
+ * have a listener / should be implemented. See #helper.MenuTypeHelper for
+ * useful functions.
  *
  * @author SpecOp0
  */
-
 public enum MenuItemType {
 
     // File menu

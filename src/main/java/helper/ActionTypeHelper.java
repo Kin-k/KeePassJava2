@@ -21,11 +21,19 @@ import javax.swing.ImageIcon;
 import view.ActionButton;
 
 /**
+ * Useeful functions for ActionType.
  *
  * @author SpecOp0
  */
 public class ActionTypeHelper {
 
+    /**
+     * Creates J(Action)Button for given ActionType. Mainly a Text and Icon (if
+     * exists) will be added.
+     *
+     * @param type type of J(Action)Button
+     * @return new JActionButton
+     */
     public static ActionButton getButton(ActionType type) {
         ActionButton button = new ActionButton(type);
         ImageIcon icon = ActionTypeHelper.getIcon(type);
@@ -38,6 +46,12 @@ public class ActionTypeHelper {
         return button;
     }
 
+    /**
+     * Tests if after given ActionType a seperator should be used.
+     *
+     * @param type ActionType to test
+     * @return true if a seperator should be placed after given type
+     */
     public static boolean isSeperatorAfterwards(ActionType type) {
         switch (type) {
             case SAVE:
@@ -49,6 +63,15 @@ public class ActionTypeHelper {
         return false;
     }
 
+    /**
+     * Tests if given ActionType should always be usable (be active). Most of
+     * the functions can only be used if a Database is loaded and might want to
+     * be not active / clickable if no Database is present. TODO replaced param
+     * ActionButton withActionType
+     *
+     * @param type ActionType to test
+     * @return true if ActionType should always be usable
+     */
     public static boolean isAlwaysActive(ActionButton button) {
         switch (button.getType()) {
             case COPY_USER:
@@ -59,6 +82,13 @@ public class ActionTypeHelper {
         return false;
     }
 
+    /**
+     * Loads ImageIcon for given ActionType from resources folder. Returns null
+     * if not found.
+     *
+     * @param type ActionType to get Icon for
+     * @return ImageIcon of given ActionType or null if Icon not found
+     */
     public static ImageIcon getIcon(ActionType type) {
         URL resource = null;
         switch (type) {

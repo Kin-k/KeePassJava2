@@ -16,6 +16,9 @@
 package enums;
 
 /**
+ * Types for ActionTypeButton whose action (e.g. load and save action) which
+ * should have a listener / should be implemented. See #helper.ActionTypeHelper
+ * for useful functions.
  *
  * @author SpecOp0
  */
