@@ -58,7 +58,6 @@ import javax.swing.event.EventListenerList;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
-import javax.swing.tree.TreePath;
 import org.linguafranca.pwdb.Entry;
 import org.linguafranca.pwdb.Group;
 import org.linguafranca.pwdb.Visitor;
@@ -69,7 +68,8 @@ import view.JMenuItemType;
 import view.KeePassPopupMenu;
 
 /**
- *
+ * Controller of KeePass 2.
+ * 
  * @author SpecOp0
  */
 public class KeePassController implements TreeSelectionListener, MouseListener {
@@ -80,16 +80,28 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
     private static Thread passwordReset = null;
     private KeePassShowObjectGUI showObjectGui = null;
     private KeePassPopupMenu popupMenu = null;
+    private final Object showObjectGuiLock = new Object();
+    private final Object popupMenuLock = new Object();
     // current database
     private DomDatabaseWrapper database = null;
     private File databaseFile = null;
     private byte[] password = null;
 
+    /**
+     * Controller of KeePass 2.
+     *
+     * @param gui view which displays the whole gui
+     * @param tree tree structure (part of the gui) which manages the basic
+     * database structure
+     */
     public KeePassController(KeePassGUI gui, KeePassTree tree) {
         this.gui = gui;
         this.tree = tree;
     }
 
+    /**
+     * Creates a new Database (safety dialog).
+     */
     public void newDatabase() {
         boolean createNewDatabase = true;
         if (null != getDatabase() && getDatabase().isDirty()) {
@@ -113,6 +125,10 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Locks the current Database (currently: deletes all changes and Database
+     * has to be reopened).
+     */
     public void lock() {
         // clear database (tree)
         setDatabase(null);
@@ -122,15 +138,28 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         updateTableData(new ArrayList<>());
     }
 
+    /**
+     * Opens Database from a File which the User has to choose.
+     */
     public void open() {
         // open file chooser to determine file
         open(KeePassGUI.chooseFile(getGui(), getDefaultDatabasePath(), true));
     }
 
+    /**
+     * Opens Database from given File.
+     *
+     * @param path Path to Database file
+     */
     public void open(String path) {
         open(new File(path));
     }
 
+    /**
+     * Opens Database from given File. Prompts the User for a password.
+     *
+     * @param file Database file
+     */
     private void open(final File file) {
         if (null != file) {
             // enter password
@@ -159,6 +188,12 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Opens Database from given File and with given Password.
+     *
+     * @param File Database file
+     * @param password Password of Database
+     */
     private void open(File file, byte[] password) {
         InputStream decryptedInputStream = null;
         try {
@@ -189,6 +224,11 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Looks for a configuration file and sets the default Path when a user is
+     * promted for a Database file (if no file is found current directory is
+     * choosen).
+     */
     private String getDefaultDatabasePath() {
         DatabasePath databasePath = new DatabasePath();
         databasePath.load();
@@ -206,6 +246,12 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         return path;
     }
 
+    /**
+     * Searches the Group of the selected DatabaseObject in the Tree. If
+     * selected DatabaseObject is an Entry, its parent group will be returned.
+     *
+     * @return Group of selected DatabaseObject
+     */
     private Group getGroupOfSelectedObject() {
         Group group = null;
         if (null != getDatabase()) {
@@ -216,7 +262,7 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
                 } else if (object.isGroup()) {
                     group = object.getGroup();
                 } else {
-                    getGui().showWarning("Adding Failed", "Error while preparing to add an object. The selected group could not be found.");
+                    getGui().showWarning("Group not found", "Error while preparing to add an Entry/Group. The selected group could not be found.");
                 }
             } else {
                 group = getDatabase().getRootGroup();
@@ -225,6 +271,9 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         return group;
     }
 
+    /**
+     * Adds an Entry to the currently selected Group (creates new GUI element).
+     */
     public void addEntry() {
         Group group = getGroupOfSelectedObject();
         if (null != group) {
@@ -232,26 +281,36 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Adds an Entry to the given group (creates new GUI element).
+     *
+     * @param group Group of new Entry
+     */
     public void addEntryToGroup(Group group) {
         if (null != getDatabase() && null == getShowObjectGui() && null != group) {
-            setShowObjectGui(new KeePassShowEntryGUI(getGui()));
-            getShowObjectGui().addWindowListener(new WindowAdapter() {
-                @Override
-                public void windowClosed(WindowEvent event) {
-                    if (getShowObjectGui().isSaveObject()) {
-                        DatabaseObject newEntry = new DatabaseObject(group.addEntry(getDatabase().newEntry()));
-                        getShowObjectGui().saveInputToObject(newEntry);
-                        notifyDatabaseChanged(newEntry);
-                        updateTableData(new DatabaseObject(group));
+            synchronized (showObjectGuiLock) {
+                setShowObjectGui(new KeePassShowEntryGUI(getGui()));
+                getShowObjectGui().addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosed(WindowEvent event) {
+                        if (getShowObjectGui().isSaveObject()) {
+                            DatabaseObject newEntry = new DatabaseObject(group.addEntry(getDatabase().newEntry()));
+                            getShowObjectGui().saveInputToObject(newEntry);
+                            notifyDatabaseChanged(newEntry);
+                            updateTableData(new DatabaseObject(group));
+                        }
+                        setShowObjectGui(null);
                     }
-                    setShowObjectGui(null);
-                }
-            });
+                });
+            }
         } else {
             getGui().showWarning("Entry/Group already shown", "Another Entry or Group window is open. You need to close that window before showing or editing another entry.");
         }
     }
 
+    /**
+     * Adds a Group to the currently selected Group (creates new GUI element).
+     */
     public void addGroup() {
         Group group = getGroupOfSelectedObject();
         if (null != group) {
@@ -259,26 +318,38 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Adds a Group to the given group (creates new GUI element).
+     *
+     * @param group Group of new Entry
+     */
     public void addGroupToGroup(Group group) {
         if (null != getDatabase() && null == getShowObjectGui()) {
-            setShowObjectGui(new KeePassShowGroupGUI(getGui()));
-            getShowObjectGui().addWindowListener(new WindowAdapter() {
-                @Override
-                public void windowClosed(WindowEvent event) {
-                    if (getShowObjectGui().isSaveObject()) {
-                        DatabaseObject newEntry = new DatabaseObject(group.addGroup(getDatabase().newGroup()));
-                        getShowObjectGui().saveInputToObject(newEntry);
-                        notifyDatabaseChanged(newEntry);
-                        updateTableData(newEntry);
+            synchronized (showObjectGuiLock) {
+                setShowObjectGui(new KeePassShowGroupGUI(getGui()));
+                getShowObjectGui().addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosed(WindowEvent event) {
+                        if (getShowObjectGui().isSaveObject()) {
+                            DatabaseObject newEntry = new DatabaseObject(group.addGroup(getDatabase().newGroup()));
+                            getShowObjectGui().saveInputToObject(newEntry);
+                            notifyDatabaseChanged(newEntry);
+                            updateTableData(newEntry);
+                        }
+                        setShowObjectGui(null);
                     }
-                    setShowObjectGui(null);
-                }
-            });
+                });
+            }
         } else {
             getGui().showWarning("Entry/Group already shown", "Another Entry or Group window is open. You need to close that window before showing or editing another group.");
         }
     }
 
+    /**
+     * Save currently open Database to a file. If Database was loaded from a
+     * file (a Database file exists and is known), then this file is used, else
+     * user input is requested.
+     */
     public void save() {
         if (isDatabaseLoadedOrGUIError()) {
             if (null != getDatabaseFile()) {
@@ -289,18 +360,23 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Save currently open Database to a file. Requests user input for a file.
+     */
     public void saveAs() {
         if (isDatabaseLoadedOrGUIError()) {
             File selectedFile = KeePassGUI.chooseFile(getGui(), getDefaultDatabasePath(), false);
             if (selectedFile != null) {
-                System.out.println("selected+" + selectedFile.getAbsolutePath());
                 save(selectedFile);
-            } else {
-                System.out.println("errörrr");
             }
         }
     }
 
+    /**
+     * Save currently open Database to given file.
+     *
+     * @param databaseFile file to save Database into
+     */
     private void save(File databaseFile) {
         if (null != databaseFile) {
             try {
@@ -341,6 +417,11 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Tests if a Database is loaded and shows an Error to the user otherwise.
+     *
+     * @return true of database is loaded
+     */
     private boolean isDatabaseLoadedOrGUIError() {
         boolean isDatabaseLoaded = null != getDatabase();
         if (!isDatabaseLoaded) {
@@ -349,6 +430,10 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         return isDatabaseLoaded;
     }
 
+    /**
+     * Shows the selected Element (Entry) in the Table (creates new GUI
+     * element).
+     */
     public void showTableSelect() {
         if (null != getDatabase()) {
             DatabaseObject object = getGui().getSelectedObject();
@@ -360,19 +445,41 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Shows the selected Element (Group or Entry) of the Tree (creates new GUI
+     * element).
+     */
     public void showTreeSelect() {
         showTreeSelect(getTree());
     }
 
+    /**
+     * Shows the selected Element (Group or Entry) of a Tree given by the
+     * MouseEvent (creates new GUI element).
+     *
+     * @param e MouseEvent in which a Tree is selected
+     */
     public void showTreeSelect(MouseEvent e) {
         JTree tree = (JTree) e.getSource();
         showTreeSelect(tree);
     }
 
+    /**
+     * Shows the selected Element (Group or Entry) of a Tree given by the
+     * ActionEvent (creates new GUI element).
+     *
+     * @param e ActionEvent in which a Tree is selected
+     */
     public void showTreeSelect(ActionEvent e) {
         showTreeSelect(getTree());
     }
 
+    /**
+     * Shows the selected Element (Group or Entry) of the given Tree (creates
+     * new GUI element).
+     *
+     * @param tree Tree of selected Element
+     */
     private void showTreeSelect(JTree tree) {
         DatabaseObject object = KeePassTree.getSelectedObject(tree);
         if (null != object && (object.isEntry() || object.isGroup())) {
@@ -380,35 +487,49 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Shows a given DatabaseObject (Group or Entry) (creates new GUI element).
+     *
+     * @param tree Tree of selected Element
+     */
     private void show(DatabaseObject object) {
         if (null == getShowObjectGui() && null != object) {
-            if (object.isEntry()) {
-                setShowObjectGui(new KeePassShowEntryGUI(getGui(), object.getEntry()));
-            } else if (object.isGroup()) {
-                setShowObjectGui(new KeePassShowGroupGUI(getGui(), object.getGroup()));
-            } else {
-                getGui().showWarning("Error while showing Data", "Try to show Entry or Group, but could not find either.");
-                throw new IllegalArgumentException("Error while showing Data: Try to show Entry or Group, but could not find either.");
-            }
-            getShowObjectGui().addWindowListener(new WindowAdapter() {
-                @Override
-                public void windowClosed(WindowEvent event) {
-                    if (getShowObjectGui().isSaveObject()) {
-                        getShowObjectGui().saveInputToObject(object);
-                        notifyDatabaseChanged();
-                    }
-                    setShowObjectGui(null);
+            synchronized (showObjectGuiLock) {
+                if (object.isEntry()) {
+                    setShowObjectGui(new KeePassShowEntryGUI(getGui(), object.getEntry()));
+                } else if (object.isGroup()) {
+                    setShowObjectGui(new KeePassShowGroupGUI(getGui(), object.getGroup()));
+                } else {
+                    getGui().showWarning("Error while showing Data", "Try to show Entry or Group, but could not find either.");
+                    throw new IllegalArgumentException("Error while showing Data: Try to show Entry or Group, but could not find either.");
                 }
-            });
+                getShowObjectGui().addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosed(WindowEvent event) {
+                        if (getShowObjectGui().isSaveObject()) {
+                            getShowObjectGui().saveInputToObject(object);
+                            notifyDatabaseChanged();
+                        }
+                        setShowObjectGui(null);
+                    }
+                });
+            }
         } else {
             getGui().showWarning("Entry already shown", "Another Entry window is open. You need to close that window before showing or editing another entry.");
         }
     }
 
+    /**
+     * Copies the Username of selected Entry (Tree) to the Clipboard.
+     */
     public void copyUsername() {
         copy(true);
     }
 
+    /**
+     * Copies the Passowrd of selected Entry (Tree) to the Clipboard. After a
+     * given time the Clipboard is cleared.
+     */
     public synchronized void copyPassword() {
         setPasswordReset(new Thread() {
             @Override
@@ -429,6 +550,11 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         getPasswordReset().start();
     }
 
+    /**
+     * Copies a Username or password of selected Entry (Tree) to the Clipboard.
+     *
+     * @param isUsername true if username, false if password should be copied
+     */
     private void copy(boolean isUsername) {
         DatabaseObject object = getGui().getSelectedObject();
         if (null != object && object.isEntry()) {
@@ -444,12 +570,20 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Copies a given message to the Clipboard.
+     *
+     * @param message message to copy to Clipboard
+     */
     public static void copyToClipboard(String message) {
         StringSelection stringSelection = new StringSelection(message);
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         clipboard.setContents(stringSelection, null);
     }
 
+    /**
+     * Deletes currently selected Entry (Table) (safety dialog included).
+     */
     public void deleteEntry() {
         if (null != getDatabase()) {
             DatabaseObject object = getGui().getSelectedObject();
@@ -461,6 +595,9 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Deletes currently selected Group (Tree) (safety dialog included).
+     */
     public void deleteGroup() {
         if (null != getDatabase()) {
             DatabaseObject object = getTree().getSelectedObject();
@@ -472,6 +609,10 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Deletes currently selected Entry or Group (Tree) (safety dialog
+     * included).
+     */
     public void deleteGroupOrEntry() {
         if (null != getDatabase()) {
             DatabaseObject object = getTree().getSelectedObject();
@@ -483,6 +624,9 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Deletes given DatabaseObject (safety dialog included).
+     */
     private void delete(DatabaseObject object) {
         if (null != object) {
             Group parent = null;
@@ -519,11 +663,19 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Searches the Database for a search string given by a GUI element.
+     */
     public void search() {
         String searchQuery = getGui().getSearchField().getText();
         search(searchQuery);
     }
 
+    /**
+     * Searches the Database for given Query.
+     *
+     * @param searchQuery Query to search the Database fore
+     */
     public void search(String searchQuery) {
         if (null != getDatabase()) {
             SwingUtilities.invokeLater(() -> {
@@ -556,6 +708,9 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Exits KeePass 2 (safety prompt if Database changed and not safed).
+     */
     public void exit() {
         if (null != getDatabase() && getDatabase().isDirty()) {
             // abort exit if database changed and user cancels action
@@ -566,6 +721,10 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         System.exit(0);
     }
 
+    /**
+     * Shows a dialog containing Information about the User distributing to this
+     * version of KeePass 2.
+     */
     public void showAboutDialog() {
         // https://stackoverflow.com/questions/8348063/clickable-links-in-joptionpane
 
@@ -603,6 +762,9 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         JOptionPane.showMessageDialog(getGui(), editorPane, "About", JOptionPane.PLAIN_MESSAGE, null);
     }
 
+    /**
+     * Opens the KeePass Webpage in default Browser.
+     */
     public static void openKeePassWebpage() {
         try {
             openWebpage(new URI("http://keepass.info/"));
@@ -610,6 +772,11 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Opens given URL in default Browser.
+     *
+     * @params url URL to webpage which should be opened
+     */
     private static void openWebpage(URL url) {
         try {
             openWebpage(url.toURI());
@@ -619,6 +786,11 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Opens given URI in default Browser.
+     *
+     * @params uri URI to webpage which should be opened
+     */
     private static void openWebpage(URI uri) {
         Desktop desktop = Desktop.isDesktopSupported() ? Desktop.getDesktop() : null;
         if (desktop != null && desktop.isSupported(Desktop.Action.BROWSE)) {
@@ -645,6 +817,13 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Updates the Table with the given DatabaseObject. A group will show all
+     * first generation Children which are an Entry. An Entry will show its
+     * Entry itself.
+     *
+     * @param object DatabaseObject to display in the Table
+     */
     private void updateTableData(DatabaseObject object) {
         for (SelectionChangedListener listener : getListeners().getListeners(SelectionChangedListener.class)) {
             listener.showData(object);
@@ -652,20 +831,44 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
 
     }
 
+    /**
+     * Updates the Table with the given List of DatabaseObject.
+     *
+     * @param entries List of DatabaseObjects to display in the Table
+     */
     private void updateTableData(List<Entry> entries) {
         for (SelectionChangedListener listener : getListeners().getListeners(SelectionChangedListener.class)) {
             listener.showData(entries);
         }
     }
 
+    /**
+     * Enables and Disables the Buttons of the GUI. Should be used if a new
+     * Database is loaded (heavy computing), but parts of the GUI shall remain
+     * responsive.
+     *
+     * @param enabled true if all Buttons should be enabled
+     */
     private void setEnabled(boolean enabled) {
         getGui().setEnabledAllButtons(enabled);
     }
 
+    /**
+     * Notifies that the Database has been changed and informs the listener
+     * which DatabaseObject is selected in the Tree (should be shown after
+     * repainting).
+     */
     public void notifyDatabaseChanged() {
         notifyDatabaseChanged(getTree().getSelectedObject());
     }
 
+    /**
+     * Notifies that the Database has been changed and informs the listener that
+     * the given DatabaseObject should be shown after repainting.
+     *
+     * @param objectToShow DatabaseObject which is selected/should be shown afte
+     * repainting
+     */
     public void notifyDatabaseChanged(DatabaseObject objectToShow) {
         DatabaseChangedEvent event = new DatabaseChangedEvent(this, getDatabase(), objectToShow);
         for (DatabaseChangedListener listener : getListeners().getListeners(DatabaseChangedListener.class)) {
@@ -673,10 +876,24 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         }
     }
 
+    /**
+     * Adds Listener of given Class to the Listener of the Controller.
+     *
+     * @param <T> Type of Listener
+     * @param className ClassName of Listener
+     * @param listener object which implements given listener
+     */
     public <T extends EventListener> void addListener(Class<T> className, T listener) {
         getListeners().add(className, listener);
     }
 
+    /**
+     * Removes Listener of given Class from the Listener of the Controller.
+     *
+     * @param <T> Type of Listener
+     * @param className ClassName of Listener
+     * @param listener object which implements given listener
+     */
     public <T extends EventListener> void removeListener(Class<T> className, T listener) {
         getListeners().remove(className, listener);
     }
@@ -707,8 +924,11 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
                     }
                 }
                 if (null != object) {
-                    setPopupMenu(new KeePassPopupMenu(object, mouseEvent.getLocationOnScreen()));
-                    addPopupMenuActionListener(object);
+                    synchronized (popupMenuLock) {
+                        setPopupMenu(new KeePassPopupMenu(object, mouseEvent.getLocationOnScreen()));
+                        addPopupMenuActionListener(object);
+
+                    }
                 }
             }
         }
@@ -778,12 +998,20 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
     }
 
     private void disposePopupMenu() {
-        if (null != getPopupMenu()) {
-            setPopupMenu(getPopupMenu().dispose());
+        synchronized (popupMenuLock) {
+            if (null != getPopupMenu()) {
+                setPopupMenu(getPopupMenu().dispose());
+            }
         }
     }
 
     // getter and setter
+    /**
+     * Sets the File of currently loaded Database. If a Database File is given,
+     * it will be saved in a configuration File.
+     *
+     * @param databaseFile File of currently loaded Database
+     */
     public void setDatabaseFile(File databaseFile) {
         // save new database file to ini file
         if (null != databaseFile) {
@@ -794,58 +1022,137 @@ public class KeePassController implements TreeSelectionListener, MouseListener {
         this.databaseFile = databaseFile;
     }
 
+    /**
+     * Gets the current Database.
+     *
+     * @return current Database
+     */
     public DomDatabaseWrapper getDatabase() {
         return database;
     }
 
+    /**
+     * Sets the current Database
+     *
+     * @param database current Database
+     */
     public void setDatabase(DomDatabaseWrapper database) {
         this.database = database;
     }
 
+    /**
+     * Gets all Listener of the Controller.
+     *
+     * @return Listener of the Controller
+     */
     public EventListenerList getListeners() {
         return listeners;
     }
 
+    /**
+     * Gets the Thread which is used to initiate the reset of the Password
+     * copied to the Clipboard.
+     *
+     * @return Thread Thread which initiates the reset of the Password copied to
+     * the Clipboard
+     */
     public static Thread getPasswordReset() {
         return passwordReset;
     }
 
+    /**
+     * Sets the Thread which is used to initiate the reset of the Password
+     * copied to the Clipboard.
+     *
+     * @param aPasswordReset Thread which initiates the reset of the Password
+     * copied to the Clipboard
+     */
     public static void setPasswordReset(Thread aPasswordReset) {
         passwordReset = aPasswordReset;
     }
 
+    /**
+     * Gets the File of currently loaded Database.
+     *
+     * @return File of currently loaded Database
+     */
     public File getDatabaseFile() {
         return databaseFile;
     }
 
+    /**
+     * Gets the Password of currently loaded Database.
+     *
+     * @return Password of currently loaded Database
+     */
     public byte[] getPassword() {
         return password;
     }
 
+    /**
+     * Sets the Password of currently loaded Database.
+     *
+     * @param password Password of currently loaded Database
+     */
     public void setPassword(byte[] password) {
         this.password = password;
     }
 
+    /**
+     * Gets the view/GUI.
+     *
+     * @return view/GUI
+     */
     public KeePassGUI getGui() {
         return gui;
     }
 
+    /**
+     * Gets the GUI which shows a DatabaseObject. Only one should be present at
+     * a time, but is not as strict as a JDialog (rest of GUI can be used).
+     *
+     * @return GUI which shows a DatabaseObject
+     */
     public KeePassShowObjectGUI getShowObjectGui() {
         return showObjectGui;
     }
 
+    /**
+     * Sets the GUI which shows a DatabaseObject. Only one should be present at
+     * a time, but is not as strict as a JDialog (rest of GUI can be used).
+     *
+     * @param showObjectGui GUI which shows a DatabaseObject
+     */
     public void setShowObjectGui(KeePassShowObjectGUI showObjectGui) {
         this.showObjectGui = showObjectGui;
     }
 
+    /**
+     * Gets the Tree (part of the gui) which manages the basic database
+     * structure
+     *
+     * @return Tree structure of Database
+     */
     public KeePassTree getTree() {
         return tree;
     }
 
+    /**
+     * Gets the GUI which shows a PopupMenu in the main GUI, if the user
+     * performs a right-click. Only one should be present at a time.
+     *
+     * @return GUI which shows a PopupMenu
+     */
     public KeePassPopupMenu getPopupMenu() {
         return popupMenu;
     }
 
+    /**
+     * Sets the GUI which shows a PopupMenu in the main GUI, if the user
+     * performs a right-click. Only one should be present at a time.
+     *
+     * @param popupMenu GUI which shows a PopupMenu
+     */
     public void setPopupMenu(KeePassPopupMenu popupMenu) {
         this.popupMenu = popupMenu;
     }

@@ -19,7 +19,6 @@ import listener.SelectionChangedListener;
 import java.util.ArrayList;
 import java.util.EventListener;
 import java.util.List;
-import javax.swing.JTable;
 import javax.swing.event.EventListenerList;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
